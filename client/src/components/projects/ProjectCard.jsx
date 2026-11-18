@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
-const categoryColors = {
-  Hackathon: "bg-primary/10 text-primary-light border-primary/20",
-  Startup: "bg-success/10 text-success border-success/20",
-  "Open Source": "bg-info/10 text-info border-info/20",
-  Research: "bg-warning/10 text-warning border-warning/20",
-  "Personal Project": "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+const categoryStyles = {
+  Hackathon: "bg-primary-tint text-primary border-primary/25",
+  Startup: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Open Source": "bg-sky-50 text-sky-700 border-sky-200",
+  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  "Personal Project": "bg-indigo-50 text-indigo-700 border-indigo-200",
 };
 
 const ProjectCard = ({ project }) => {
@@ -18,8 +18,8 @@ const ProjectCard = ({ project }) => {
     skillsRequired = [],
     roles = [],
     creator = {},
-    maxTeamSize,
-    currentTeamSize,
+    maxTeamSize = 5,
+    currentTeamSize = 1,
   } = project;
 
   // Calculate vacancies from roles
@@ -29,7 +29,7 @@ const ProjectCard = ({ project }) => {
   );
 
   const truncatedDesc =
-    description.length > 110 ? `${description.slice(0, 110)}...` : description;
+    description.length > 120 ? `${description.slice(0, 120)}...` : description;
 
   const initials = creator.name
     ? creator.name
@@ -40,36 +40,38 @@ const ProjectCard = ({ project }) => {
         .slice(0, 2)
     : "TF";
 
+  const isFull = currentTeamSize >= maxTeamSize;
+
   return (
     <motion.div
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      className="group relative bg-card-surface border border-border-slate hover:border-primary transition-all duration-200 rounded-card p-6 flex flex-col justify-between overflow-hidden shadow-subtle"
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="group relative bg-card-surface border border-border-slate hover:border-primary/50 transition-all duration-200 rounded-card p-6 flex flex-col justify-between shadow-subtle hover:shadow-card"
     >
-      {/* Background card glow hover effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-
-      <div className="relative z-10">
-        {/* Category & Status */}
-        <div className="flex items-center justify-between mb-4">
+      <div>
+        {/* Category & Team Gauge */}
+        <div className="flex items-center justify-between mb-3.5">
           <span
-            className={`text-xs font-semibold px-3 py-1 rounded-full border ${
-              categoryColors[category] || "bg-gray-500/10 text-gray-300 border-gray-500/20"
+            className={`text-xs font-bold px-3 py-1 rounded-full border ${
+              categoryStyles[category] || "bg-[#F8F5EF] text-text-secondary border-border-slate"
             }`}
           >
             {category}
           </span>
-          <span className="text-xs text-gray-400 font-medium">
-            Team: {currentTeamSize}/{maxTeamSize || 10}
-          </span>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary bg-[#FAF8F4] px-2.5 py-1 rounded-full border border-border-slate">
+            <span className={`w-1.5 h-1.5 rounded-full ${isFull ? "bg-text-muted" : "bg-success"}`} />
+            <span>{currentTeamSize}/{maxTeamSize} Members</span>
+          </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-white font-extrabold text-xl mb-2 group-hover:text-primary-light transition-colors tracking-tight">
-          {title}
-        </h3>
+        <Link to={`/projects/${_id}`}>
+          <h3 className="text-charcoal font-black text-xl mb-2.5 group-hover:text-primary transition-colors tracking-tight line-clamp-1">
+            {title}
+          </h3>
+        </Link>
 
         {/* Description excerpt */}
-        <p className="text-gray-400 text-sm leading-relaxed mb-5">
+        <p className="text-text-muted text-sm leading-relaxed mb-5 line-clamp-3">
           {truncatedDesc}
         </p>
 
@@ -79,13 +81,13 @@ const ProjectCard = ({ project }) => {
             {skillsRequired.slice(0, 4).map((skill) => (
               <span
                 key={skill}
-                className="text-[11px] bg-white/5 text-gray-300 border border-border-slate px-2 py-0.5 rounded"
+                className="text-xs font-medium bg-[#F8F5EF] text-charcoal border border-border-slate px-2.5 py-0.5 rounded-md"
               >
                 {skill}
               </span>
             ))}
             {skillsRequired.length > 4 && (
-              <span className="text-[11px] text-gray-400 font-medium pl-1 self-center">
+              <span className="text-xs text-text-muted font-bold pl-1 self-center">
                 +{skillsRequired.length - 4} more
               </span>
             )}
@@ -93,31 +95,30 @@ const ProjectCard = ({ project }) => {
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="relative z-10 pt-4 border-t border-border-slate flex items-center justify-between mt-auto">
-        <div className="flex items-center gap-2.5">
-          {/* Creator Initials Circle */}
-          <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center font-bold text-xs text-white">
+      {/* Footer Info & Creator */}
+      <div className="pt-4 border-t border-border-slate flex items-center justify-between mt-auto">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-charcoal text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-subtle">
             {initials}
           </div>
-          <div>
-            <span className="text-xs font-semibold text-gray-300 block leading-tight">
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-charcoal block leading-tight truncate">
               {creator.name}
             </span>
-            <span className="text-[10px] text-gray-400 block leading-none mt-0.5">
-              {creator.year} • {creator.branch}
+            <span className="text-[10px] text-text-muted block leading-none mt-0.5 truncate">
+              {creator.college ? `${creator.college}` : creator.branch || "Student Lead"}
             </span>
           </div>
         </div>
 
-        {/* Action button */}
+        {/* Action Link */}
         <Link
           to={`/projects/${_id}`}
-          className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 group/btn"
+          className="text-xs font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 shrink-0 group/link"
         >
-          View Details
+          <span>View Details</span>
           <svg
-            className="w-3.5 h-3.5 transform group-hover/btn:translate-x-0.5 transition-transform"
+            className="w-3.5 h-3.5 transform group-hover/link:translate-x-0.5 transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -125,7 +126,7 @@ const ProjectCard = ({ project }) => {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={2.5}
               d="M9 5l7 7-7 7"
             />
           </svg>

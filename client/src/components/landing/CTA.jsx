@@ -3,54 +3,42 @@ import { motion } from "framer-motion";
 
 const CTA = () => {
   return (
-    <section className="py-28 px-6">
-      <div className="max-w-4xl mx-auto">
+    <section className="py-20 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="relative rounded-3xl overflow-hidden"
+          transition={{ duration: 0.5 }}
+          className="relative rounded-card overflow-hidden bg-card-surface border border-border-slate p-8 md:p-14 text-center shadow-card"
         >
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-800/80 via-violet-700/60 to-purple-900/80" />
-          <div className="absolute inset-0 bg-[#0a0a0f]/30" />
-
-          {/* Decorative orbs */}
-          <div className="absolute -top-10 -right-10 w-64 h-64 bg-purple-400/20 rounded-full blur-[60px]" />
-          <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-violet-500/20 rounded-full blur-[60px]" />
-
-          {/* Grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
+          {/* Subtle warm glow background */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary/10 rounded-full blur-[70px] pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-[70px] pointer-events-none" />
 
           {/* Content */}
-          <div className="relative px-10 py-16 text-center">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
-              Ready to find your dream team?
+          <div className="relative space-y-4 max-w-2xl mx-auto">
+            <span className="inline-block text-[10px] font-bold text-primary tracking-widest uppercase px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
+              Get Started Today
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-primary-text tracking-tight">
+              Ready to assemble your dream builder team?
             </h2>
-            <p className="text-purple-200 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-              Join thousands of students already collaborating on TeamForge.
-              Your next big project starts here.
+            <p className="text-muted-text text-sm md:text-base leading-relaxed">
+              Join student developers, UI designers, and creators building real products and winning hackathons on TeamForge.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
               <Link
                 to="/register"
-                className="px-8 py-4 rounded-2xl font-semibold text-purple-900 bg-white hover:bg-purple-50 transition-all duration-200 hover:scale-105 shadow-xl"
+                className="w-full sm:w-auto px-7 py-3 rounded-btn font-bold text-xs text-white bg-primary hover:bg-primary-hover transition-all duration-200 shadow-subtle hover:-translate-y-0.5"
               >
                 Create Free Account
               </Link>
               <Link
                 to="/projects"
-                className="px-8 py-4 rounded-2xl font-semibold text-white border border-white/30 hover:bg-white/10 transition-all duration-200"
+                className="w-full sm:w-auto px-7 py-3 rounded-btn font-bold text-xs text-primary-text bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-border-slate transition-all duration-200"
               >
-                Browse Projects
+                Explore Projects ↗
               </Link>
             </div>
           </div>

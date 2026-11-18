@@ -114,34 +114,34 @@ const ApplyModal = ({ project, isOpen, onClose, onSuccess }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+          className="absolute inset-0 bg-[#242424]/60 backdrop-blur-sm"
         />
 
         {/* Modal Content */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="relative w-full max-w-lg bg-bg-secondary border border-border-slate rounded-modal p-6 md:p-8 shadow-premium z-10 overflow-y-auto max-h-[90vh]"
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ duration: 0.2 }}
+          className="relative w-full max-w-lg bg-card-surface border border-border-slate rounded-card p-6 md:p-8 shadow-premium z-10 overflow-y-auto max-h-[90vh]"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6 pb-3 border-b border-border-slate">
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Apply to Join Team</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Project: {title}</p>
+              <h2 className="text-xl font-black text-charcoal tracking-tight">Apply to Join Team</h2>
+              <p className="text-xs text-text-muted mt-0.5">Project: {title}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-xl font-medium cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#F8F5EF] hover:bg-border-slate flex items-center justify-center text-text-secondary hover:text-charcoal font-bold cursor-pointer transition-colors"
             >
               ×
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-danger/10 border border-danger/20 text-danger text-xs rounded-card flex items-center gap-2">
-              <svg className="w-4.5 h-4.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-danger text-xs rounded-btn flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <span>{error}</span>
@@ -151,14 +151,14 @@ const ApplyModal = ({ project, isOpen, onClose, onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Target Role Dropdown */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-300 block">Select Role</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">Target Role</label>
               <select
                 name="roleId"
                 value={formData.roleId}
                 onChange={handleChange}
-                className={`w-full bg-card-surface border rounded-input py-2.5 px-3 text-white text-sm outline-none transition-colors ${
+                className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white ${
                   validationErrors.roleId
-                    ? "border-danger/50 focus:border-danger"
+                    ? "border-danger focus:border-danger"
                     : "border-border-slate focus:border-primary"
                 }`}
               >
@@ -170,68 +170,68 @@ const ApplyModal = ({ project, isOpen, onClose, onSuccess }) => {
                 ))}
               </select>
               {validationErrors.roleId && (
-                <p className="text-[11px] text-danger">{validationErrors.roleId}</p>
+                <p className="text-xs text-danger font-semibold">{validationErrors.roleId}</p>
               )}
             </div>
 
             {/* Introduction */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-300 block">Short Introduction</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">Short Introduction</label>
               <textarea
                 name="introduction"
                 value={formData.introduction}
                 onChange={handleChange}
                 rows={2}
                 maxLength={300}
-                placeholder="Introduce yourself, your background, or what you're studying..."
-                className={`w-full bg-card-surface border rounded-input py-2.5 px-3 text-white text-sm outline-none transition-colors resize-none placeholder:text-gray-500 ${
+                placeholder="Introduce yourself, your academic background, or what you're studying..."
+                className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white resize-none placeholder:text-text-muted ${
                   validationErrors.introduction
-                    ? "border-danger/50 focus:border-danger"
+                    ? "border-danger focus:border-danger"
                     : "border-border-slate focus:border-primary"
                 }`}
               />
-              <div className="flex justify-between items-center text-[10px] text-gray-400 px-1">
-                <span>{validationErrors.introduction && <span className="text-danger">{validationErrors.introduction}</span>}</span>
+              <div className="flex justify-between items-center text-[10px] text-text-muted px-1">
+                <span>{validationErrors.introduction && <span className="text-danger font-semibold">{validationErrors.introduction}</span>}</span>
                 <span>{formData.introduction.length}/300</span>
               </div>
             </div>
 
             {/* Why Join */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-300 block">Why do you want to join this project?</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">Why do you want to join this project?</label>
               <textarea
                 name="whyJoin"
                 value={formData.whyJoin}
                 onChange={handleChange}
                 rows={3}
                 maxLength={500}
-                placeholder="Share why this project interests you and how you can contribute..."
-                className={`w-full bg-card-surface border rounded-input py-2.5 px-3 text-white text-sm outline-none transition-colors resize-none placeholder:text-gray-500 ${
+                placeholder="Share why this project interests you and how you can contribute to the team..."
+                className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white resize-none placeholder:text-text-muted ${
                   validationErrors.whyJoin
-                    ? "border-danger/50 focus:border-danger"
+                    ? "border-danger focus:border-danger"
                     : "border-border-slate focus:border-primary"
                 }`}
               />
-              <div className="flex justify-between items-center text-[10px] text-gray-400 px-1">
-                <span>{validationErrors.whyJoin && <span className="text-danger">{validationErrors.whyJoin}</span>}</span>
+              <div className="flex justify-between items-center text-[10px] text-text-muted px-1">
+                <span>{validationErrors.whyJoin && <span className="text-danger font-semibold">{validationErrors.whyJoin}</span>}</span>
                 <span>{formData.whyJoin.length}/500</span>
               </div>
             </div>
 
             {/* Skills tag input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-300 block">Relevant Skills</label>
-              <div className="flex flex-wrap gap-1.5 p-1.5 bg-card-surface border border-border-slate rounded-input min-h-[38px]">
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">Relevant Skills</label>
+              <div className="flex flex-wrap gap-1.5 p-2 bg-[#F8F5EF] border border-border-slate rounded-input min-h-[42px] focus-within:bg-white focus-within:border-primary">
                 {skills.map((skill, index) => (
                   <span
                     key={skill}
-                    className="text-[10px] font-medium bg-primary/10 text-primary-light border border-primary/20 px-2 py-0.5 rounded-md flex items-center gap-1"
+                    className="text-xs font-semibold bg-white text-charcoal border border-border-slate px-2 py-0.5 rounded-md flex items-center gap-1.5 shadow-subtle"
                   >
                     {skill}
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(index)}
-                      className="text-primary-light hover:text-white text-[8px] font-bold"
+                      className="text-text-muted hover:text-danger text-xs font-bold cursor-pointer"
                     >
                       ×
                     </button>
@@ -242,44 +242,44 @@ const ApplyModal = ({ project, isOpen, onClose, onSuccess }) => {
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={handleKeyDownSkill}
-                  className="bg-transparent text-white text-xs outline-none flex-grow min-w-[80px] px-1 py-0.5"
-                  placeholder={skills.length === 0 ? "React, Python..." : ""}
+                  className="bg-transparent text-charcoal text-xs outline-none flex-grow min-w-[100px] px-1 py-0.5"
+                  placeholder={skills.length === 0 ? "Type skill and press Enter (e.g. React, Python)..." : "Add more..."}
                 />
               </div>
               {validationErrors.skills && (
-                <p className="text-[11px] text-danger">{validationErrors.skills}</p>
+                <p className="text-xs text-danger font-semibold">{validationErrors.skills}</p>
               )}
             </div>
 
             {/* GitHub Profile URL */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-300 block">GitHub Profile Link (Optional)</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">GitHub Profile Link (Optional)</label>
               <input
                 type="text"
                 name="githubUrl"
                 value={formData.githubUrl}
                 onChange={handleChange}
-                placeholder="github.com/your-username"
-                className="w-full bg-card-surface border border-border-slate focus:border-primary rounded-input py-2.5 px-3 text-white text-sm outline-none transition-colors placeholder:text-gray-500"
+                placeholder="https://github.com/your-username"
+                className="w-full bg-[#F8F5EF] border border-border-slate focus:border-primary focus:bg-white rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors placeholder:text-text-muted"
               />
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-3">
+            <div className="flex gap-3 pt-3 border-t border-border-slate">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 py-2.5 px-4 rounded-btn text-xs font-semibold text-gray-300 hover:text-white border border-border-slate hover:bg-hover-surface transition-all"
+                className="flex-1 py-2.5 px-4 rounded-btn text-xs font-bold text-text-secondary hover:text-charcoal bg-[#F8F5EF] hover:bg-white border border-border-slate transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2.5 px-4 rounded-btn text-xs font-semibold text-white bg-primary hover:bg-primary-hover shadow-subtle transition-all hover:scale-[1.01] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-orange-sm transition-all hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                {loading ? "Submitting..." : "Submit Application"}
+                {loading ? "Submitting Application..." : "Submit Application"}
               </button>
             </div>
           </form>

@@ -15,7 +15,7 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
   const [editingMessage, setEditingMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   const textareaRef = useRef(null);
   const mentionsRef = useRef(null);
 
@@ -113,15 +113,14 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
     const selectionStart = textareaRef.current.selectionStart;
     const textBeforeCursor = val.slice(0, selectionStart);
     const textAfterCursor = val.slice(selectionStart);
-    
+
     const words = textBeforeCursor.split(/[\s\n]/);
-    words.pop(); // Remove the typed @term
-    
+    words.pop();
+
     const newTextBeforeCursor = [...words, `@${member.name} `].join(" ");
     setMessage(newTextBeforeCursor + textAfterCursor);
     setShowMentions(false);
 
-    // Refocus and place cursor after inserted mention
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -197,12 +196,12 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
       if (part.startsWith("@")) {
         const nameCandidate = part.replace("@", "").trim();
         const isProjectMember = teamMembers.some((m) => m.name.toLowerCase() === nameCandidate.toLowerCase());
-        
+
         if (isProjectMember) {
           return (
             <span
               key={index}
-              className="bg-primary/20 text-primary-light font-bold rounded px-1.5 py-0.5 border border-primary/20"
+              className="bg-primary/10 text-primary font-bold rounded px-1.5 py-0.5 border border-primary/25"
             >
               {part}
             </span>
@@ -214,25 +213,23 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
   };
 
   return (
-    <div className="space-y-6 flex flex-col h-full justify-between">
-      
+    <div className="space-y-4 flex flex-col h-full justify-between pt-2">
       {/* Comments List scroll area */}
-      <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1.5 custom-scrollbar">
         {comments.length > 0 ? (
           comments.map((comment) => {
-            const isAuthor = currentUser && comment.author?._id === currentUser.id;
+            const isAuthor = currentUser && (comment.author?._id === currentUser._id || comment.author?._id === currentUser.id);
             const isEditing = editingCommentId === comment._id;
 
             return (
-              <div key={comment._id} className="flex gap-3 bg-bg-secondary/40 border border-border-slate/50 p-4 rounded-card">
-                
+              <div key={comment._id} className="flex gap-3 bg-[#FAF7F2] border border-border-slate p-3.5 rounded-card shadow-subtle">
                 {/* Author Avatar */}
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-border-slate bg-bg-base shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-border-slate bg-white shrink-0">
                   {comment.author?.profilePicture ? (
                     <img src={comment.author.profilePicture} alt={comment.author.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-primary/20 text-primary-light">
-                      {comment.author?.name ? comment.author.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "TF"}
+                    <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-primary/10 text-primary">
+                      {comment.author?.name ? comment.author.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "TF"}
                     </div>
                   )}
                 </div>
@@ -241,14 +238,14 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="font-bold text-white text-xs">{comment.author?.name}</span>
-                      <span className="text-[10px] text-gray-500 ml-2">
-                        {new Date(comment.createdAt).toLocaleString()}
-                        {comment.edited && <span className="italic ml-1">(edited)</span>}
+                      <span className="font-bold text-primary-text text-xs">{comment.author?.name}</span>
+                      <span className="text-[10px] text-muted-text ml-2">
+                        {new Date(comment.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {comment.edited && <span className="italic ml-1 font-medium">(edited)</span>}
                       </span>
                     </div>
 
-                    {/* Actions dropdown/buttons */}
+                    {/* Actions buttons */}
                     {isAuthor && !isEditing && (
                       <div className="flex items-center gap-2">
                         <button
@@ -256,13 +253,13 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
                             setEditingCommentId(comment._id);
                             setEditingMessage(comment.message);
                           }}
-                          className="text-[10px] text-gray-400 hover:text-white transition-colors cursor-pointer"
+                          className="text-[10px] font-semibold text-muted-text hover:text-primary transition-colors cursor-pointer"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(comment._id)}
-                          className="text-[10px] text-danger/80 hover:text-danger transition-colors cursor-pointer"
+                          className="text-[10px] font-semibold text-danger/80 hover:text-danger transition-colors cursor-pointer"
                         >
                           Delete
                         </button>
@@ -275,78 +272,78 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
                       <textarea
                         value={editingMessage}
                         onChange={(e) => setEditingMessage(e.target.value)}
-                        className="w-full bg-card-surface border border-border-slate focus:border-primary rounded-input p-2 text-white text-xs outline-none resize-none"
+                        className="w-full bg-white border border-border-slate focus:border-primary rounded-input p-2 text-primary-text text-xs outline-none resize-none"
                         rows={2}
                       />
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => setEditingCommentId(null)}
-                          className="px-2.5 py-1 bg-transparent border border-border-slate rounded text-[10px] text-gray-300 hover:text-white"
+                          className="px-2.5 py-1 bg-transparent border border-border-slate rounded-btn text-[10px] font-bold text-muted-text hover:text-primary-text"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => handleSaveEdit(comment._id)}
-                          className="px-3 py-1 bg-primary hover:bg-primary-hover text-white rounded text-[10px] font-bold"
+                          className="px-3 py-1 bg-primary hover:bg-primary-hover text-white rounded-btn text-[10px] font-bold shadow-subtle"
                         >
                           Save
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-white/85 text-xs leading-relaxed whitespace-pre-wrap">
+                    <p className="text-primary-text text-xs leading-relaxed whitespace-pre-wrap">
                       {renderMessageContent(comment.message)}
                     </p>
                   )}
-
                 </div>
-
               </div>
             );
           })
         ) : (
-          <div className="text-center py-8 text-gray-500 text-xs">
-            💬 No comments posted yet. Start the discussion below!
+          <div className="text-center py-8 text-muted-text text-xs bg-[#FAF7F2] border border-border-slate rounded-card">
+            💬 No comments posted yet. Start the task discussion below!
           </div>
         )}
       </div>
 
       {/* Input Form area */}
-      <div className="relative pt-4 border-t border-border-slate/40 mt-4">
+      <div className="relative pt-3 border-t border-border-slate mt-2">
         {error && (
-          <div className="p-2 bg-danger/10 border border-danger/20 text-danger text-[10px] rounded mb-2">
+          <div className="p-2 bg-danger/10 border border-danger/20 text-danger text-[10px] rounded mb-2 font-semibold">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSendComment} className="relative flex items-end gap-2">
           <div className="relative flex-1">
-            
             {/* Mentions Auto-complete Dropdown */}
             {showMentions && getFilteredMembers().length > 0 && (
               <div
                 ref={mentionsRef}
-                className="absolute bottom-full mb-2 left-0 w-60 bg-bg-secondary border border-border-slate rounded-card shadow-premium max-h-40 overflow-y-auto z-50 p-1"
+                className="absolute bottom-full mb-2 left-0 w-64 bg-card-surface border border-border-slate rounded-card shadow-modal max-h-44 overflow-y-auto z-50 p-1 custom-scrollbar"
               >
+                <div className="px-2 py-1 text-[9px] font-bold text-muted-text uppercase tracking-wider border-b border-border-slate/50">
+                  Mention Teammate
+                </div>
                 {getFilteredMembers().map((member, index) => (
                   <button
                     key={member._id}
                     type="button"
                     onClick={() => insertMention(member)}
-                    className={`w-full text-left px-3 py-2 rounded text-xs flex items-center gap-2 transition-colors cursor-pointer ${
-                      index === activeMentionIndex ? "bg-primary text-white" : "hover:bg-hover-surface text-gray-300"
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 transition-colors cursor-pointer ${
+                      index === activeMentionIndex ? "bg-primary text-white" : "hover:bg-[#FAF7F2] text-primary-text"
                     }`}
                   >
-                    <div className="w-5 h-5 rounded-full overflow-hidden border border-border-slate bg-bg-base shrink-0">
+                    <div className="w-5 h-5 rounded-full overflow-hidden border border-border-slate bg-[#FAF7F2] shrink-0">
                       {member.profilePicture ? (
                         <img src={member.profilePicture} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center font-bold text-[9px] bg-primary/20 text-primary-light">
-                          {member.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                        <div className="w-full h-full flex items-center justify-center font-bold text-[9px] bg-primary/10 text-primary">
+                          {member.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                         </div>
                       )}
                     </div>
-                    <span className="truncate">{member.name}</span>
+                    <span className="truncate font-semibold">{member.name}</span>
                   </button>
                 ))}
               </div>
@@ -359,20 +356,19 @@ const TaskComments = ({ taskId, projectId, currentUser }) => {
               onChange={handleTextareaInput}
               onKeyDown={handleKeyDown}
               placeholder="Post a comment... Use @name to mention a teammate"
-              className="w-full bg-card-surface border border-border-slate focus:border-primary rounded-input px-3.5 py-2.5 text-white text-xs outline-none resize-none placeholder:text-gray-500"
+              className="w-full bg-[#FAF7F2] border border-border-slate focus:border-primary focus:bg-white rounded-input px-3.5 py-2 text-primary-text text-xs outline-none resize-none placeholder:text-muted-text/60 transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={!message.trim()}
-            className="px-4 py-2.5 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-btn text-xs font-bold transition-colors cursor-pointer shrink-0 h-10 flex items-center justify-center"
+            className="px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-40 text-white rounded-btn text-xs font-bold transition-colors cursor-pointer shrink-0 h-10 flex items-center justify-center shadow-subtle"
           >
             Send
           </button>
         </form>
       </div>
-
     </div>
   );
 };

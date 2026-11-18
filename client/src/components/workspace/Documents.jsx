@@ -75,9 +75,8 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
       if (res.success) {
         if (append) {
           setAttachments((prev) => {
-            // Filter duplicates if any
-            const existingIds = new Set(prev.map(a => a._id));
-            const fresh = res.attachments.filter(a => !existingIds.has(a._id));
+            const existingIds = new Set(prev.map((a) => a._id));
+            const fresh = res.attachments.filter((a) => !existingIds.has(a._id));
             return [...prev, ...fresh];
           });
         } else {
@@ -103,12 +102,10 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
     if (!socket) return;
 
     const handleUploaded = (attachment) => {
-      // Avoid duplicate insertions if uploader has already replaced their optimistic placeholder
       setAttachments((prev) => {
         const existingIdx = prev.findIndex((a) => a._id === attachment._id);
         if (existingIdx !== -1) {
           const existing = prev[existingIdx];
-          // Version safety: Compare updatedAt to ignore stale records
           if (new Date(existing.updatedAt) >= new Date(attachment.updatedAt)) {
             return prev;
           }
@@ -116,7 +113,6 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
           updated[existingIdx] = attachment;
           return updated;
         }
-        // Place new uploads at the beginning of the list to preserve "newest first"
         return [attachment, ...prev];
       });
     };
@@ -150,7 +146,6 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
 
     setUploadQueue((prev) => [...prev, queueItem]);
 
-    // Insert optimistic UI placeholder to documents list
     const ext = file.name.split(".").pop().toLowerCase();
     const fileType = getFileType(ext);
     const placeholder = {
@@ -162,9 +157,9 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
       mimeType: file.type,
       fileUrl: "",
       uploadedBy: {
-        _id: currentUser._id,
-        name: currentUser.name,
-        profilePicture: currentUser.profilePicture,
+        _id: currentUser?._id,
+        name: currentUser?.name,
+        profilePicture: currentUser?.profilePicture,
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -190,21 +185,11 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
       );
 
       if (res.success) {
-        // Remove optimistic placeholder.
-        // The socket event will add the real attachment.
-        setAttachments((prev) =>
-          prev.filter((a) => a._id !== uploadId)
-        );
-
-        // Clear from upload queue
-        setUploadQueue((prev) =>
-          prev.filter((q) => q.id !== uploadId)
-        );
+        setAttachments((prev) => prev.filter((a) => a._id !== uploadId));
+        setUploadQueue((prev) => prev.filter((q) => q.id !== uploadId));
       }
     } catch (err) {
-      // Remove optimistic placeholder card on error or cancel abort
       setAttachments((prev) => prev.filter((a) => a._id !== uploadId));
-      // Mark queue item as failed
       setUploadQueue((prev) =>
         prev.map((q) =>
           q.id === uploadId
@@ -219,7 +204,7 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     Array.from(files).forEach(processUpload);
-    e.target.value = ""; // clear value
+    e.target.value = "";
   };
 
   const handleDragOver = (e) => {
@@ -248,7 +233,6 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
   };
 
   const retryUpload = (queueItem) => {
-    // Retry flow: clean queue record and spawn fresh process
     setUploadQueue((prev) => prev.filter((q) => q.id !== queueItem.id));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -261,7 +245,6 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
     try {
       const res = await deleteAttachment(attachmentId);
       if (res.success) {
-        // Incrementally update list (re-render triggers stats and badges updates)
         setAttachments((prev) => prev.filter((a) => a._id !== attachmentId));
       }
     } catch (err) {
@@ -292,26 +275,20 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
 
   // ─── LOCAL FILTERING & SORTING ─────────────────────────────────────────────
   const filteredAttachments = attachments.filter((item) => {
-    // 1. Search Query Match
     const matchSearch = item.fileName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // 2. Type Filter Match
     let matchFilter = true;
     if (activeFilter !== "all") {
       matchFilter = item.fileType === activeFilter;
     }
-
     return matchSearch && matchFilter;
   });
 
-  // Sort local datasets incrementally (avoids backend fetches)
   const sortedAttachments = [...filteredAttachments].sort((a, b) => {
     const timeA = new Date(a.createdAt).getTime();
     const timeB = new Date(b.createdAt).getTime();
     return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
   });
 
-  // ─── DYNAMIC STATISTICS (INCREMENTAL CALCULATIONS) ───────────────────────
   const getStorageStats = () => {
     const totalDocs = attachments.length;
     const totalBytes = attachments.reduce((sum, a) => sum + (a.fileSize || 0), 0);
@@ -332,19 +309,19 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* STORAGE STATS SUMMARY HEADER CARD */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* STORAGE STATS SUMMARY */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: "Total Documents", value: stats.totalDocs, emoji: "📁" },
-          { label: "Storage Capacity Used", value: stats.totalStorage, emoji: "💽" },
+          { label: "Capacity Used", value: stats.totalStorage, emoji: "💽" },
           { label: "Image Files", value: stats.imagesCount, emoji: "🖼️" },
           { label: "PDF Documents", value: stats.pdfsCount, emoji: "📕" },
           { label: "Other Formats", value: stats.otherCount, emoji: "📎" },
         ].map((stat, i) => (
-          <div key={i} className="bg-card-surface border border-border-slate p-4 rounded-card text-center shadow-subtle">
+          <div key={i} className="bg-card-surface border border-border-slate p-4 rounded-card text-center shadow-subtle hover:border-primary/40 transition-colors">
             <span className="text-xl block mb-1">{stat.emoji}</span>
-            <span className="text-[9px] text-gray-400 block uppercase tracking-wider font-bold">{stat.label}</span>
-            <span className="text-base font-black text-white block mt-1">{stat.value}</span>
+            <span className="text-[10px] text-muted-text block uppercase tracking-wider font-bold">{stat.label}</span>
+            <span className="text-base font-black text-primary-text block mt-0.5">{stat.value}</span>
           </div>
         ))}
       </div>
@@ -357,7 +334,7 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
         className={`border-2 border-dashed rounded-card p-8 text-center transition-all duration-200 ${
           dragOver
             ? "border-primary bg-primary/5 shadow-subtle"
-            : "border-border-slate bg-bg-secondary hover:border-primary"
+            : "border-border-slate bg-card-surface hover:border-primary/50"
         }`}
       >
         <input
@@ -368,17 +345,17 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
           onChange={handleFileChange}
           className="hidden"
         />
-        <div className="space-y-4">
-          <div className="w-12 h-12 mx-auto rounded-card bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
+        <div className="space-y-3.5 max-w-md mx-auto">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl shadow-inner-soft">
             📤
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-white">Drag & drop files here to upload</p>
-            <p className="text-xs text-gray-400">Supports Images, PDFs, Office docs, TXT, ZIP, and RAR (Max 10 MB)</p>
+            <p className="text-sm font-bold text-primary-text">Drag & drop workspace files here</p>
+            <p className="text-xs text-muted-text">Supports Images, PDFs, Docs, Sheets, TXT, ZIP, and Code snippets (Max 10 MB)</p>
           </div>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-5 py-2 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover transition-all duration-200 cursor-pointer"
+            className="px-5 py-2.5 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-subtle transition-all duration-200 cursor-pointer"
             aria-label="Browse local files to upload"
           >
             Browse Files
@@ -388,25 +365,25 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
 
       {/* UPLOAD QUEUE CONSOLE PANEL */}
       {uploadQueue.length > 0 && (
-        <div className="bg-bg-secondary border border-border-slate p-5 rounded-card space-y-3.5 shadow-premium">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Active Upload Queue</h3>
-          <div className="space-y-3.5">
+        <div className="bg-card-surface border border-border-slate p-5 rounded-card space-y-3.5 shadow-card">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-text">Active Upload Queue</h3>
+          <div className="space-y-2.5">
             {uploadQueue.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4 p-3.5 rounded-card bg-card-surface/40 border border-border-slate">
-                <div className="min-w-0 flex-1 space-y-1">
+              <div key={item.id} className="flex items-center justify-between gap-4 p-3.5 rounded-card bg-[#FAF7F2] border border-border-slate/70">
+                <div className="min-w-0 flex-1 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-white truncate max-w-sm">{item.name}</span>
-                    <span className="text-[10px] text-gray-400 font-medium shrink-0">{formatBytes(item.size)}</span>
+                    <span className="font-bold text-primary-text truncate max-w-sm">{item.name}</span>
+                    <span className="text-[10px] text-muted-text font-semibold shrink-0">{formatBytes(item.size)}</span>
                   </div>
                   {item.status === "uploading" ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-full bg-bg-base h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#E9E4DA] h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="gradient-bg h-full rounded-full transition-all duration-300"
+                          className="bg-primary h-full rounded-full transition-all duration-300"
                           style={{ width: `${item.progress}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-bold text-primary-light shrink-0">{item.progress}%</span>
+                      <span className="text-[10px] font-bold text-primary shrink-0">{item.progress}%</span>
                     </div>
                   ) : (
                     <p className="text-[10px] text-danger font-semibold">{item.error}</p>
@@ -438,9 +415,9 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
       )}
 
       {/* FILTER & SORT TOOLS PANEL */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-slate pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card-surface border border-border-slate p-4 rounded-card shadow-subtle">
         {/* Category Filters */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {[
             { label: "All Docs", value: "all" },
             { label: "Images", value: "image" },
@@ -456,8 +433,8 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
               onClick={() => setActiveFilter(filt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 activeFilter === filt.value
-                  ? "bg-primary/10 text-primary-light border border-primary/20"
-                  : "text-gray-400 bg-card-surface hover:text-gray-300 border border-border-slate"
+                  ? "bg-primary text-white shadow-subtle"
+                  : "text-muted-text hover:text-primary-text bg-[#FAF7F2] border border-border-slate/60 hover:bg-[#F2ECE1]"
               }`}
             >
               {filt.label}
@@ -466,18 +443,18 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
         </div>
 
         {/* Search & Sort order dropdowns */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <input
             type="text"
             placeholder="Search documents..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-card-surface border border-border-slate rounded-input px-3.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-primary w-full sm:w-48"
+            className="bg-[#FAF7F2] border border-border-slate rounded-input px-3.5 py-1.5 text-xs text-primary-text placeholder:text-muted-text/60 focus:outline-none focus:border-primary focus:bg-white w-full sm:w-48 transition-colors"
           />
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="bg-card-surface border border-border-slate rounded-input px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-primary cursor-pointer"
+            className="bg-[#FAF7F2] border border-border-slate rounded-input px-3 py-1.5 text-xs text-primary-text font-medium focus:outline-none focus:border-primary cursor-pointer"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -495,15 +472,15 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[...Array(8)].map((_, idx) => (
-            <div key={idx} className="bg-card-surface/50 border border-border-slate p-4 rounded-card space-y-4 animate-pulse">
+            <div key={idx} className="bg-card-surface border border-border-slate p-4 rounded-card space-y-4 animate-pulse shadow-subtle">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-card bg-bg-base border border-border-slate shrink-0" />
+                <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-border-slate shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 bg-primary/10 rounded w-3/4" />
                   <div className="h-2 bg-primary/5 rounded w-1/2" />
                 </div>
               </div>
-              <div className="flex justify-between items-center pt-2">
+              <div className="flex justify-between items-center pt-2 border-t border-border-slate/40">
                 <div className="h-2.5 bg-primary/5 rounded w-1/4" />
                 <div className="h-6 bg-primary/10 rounded w-1/3" />
               </div>
@@ -515,13 +492,13 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
           {/* DOCUMENTS GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {sortedAttachments.map((item) => {
-              const isUploader = item.uploadedBy?._id === currentUser._id;
+              const isUploader = item.uploadedBy?._id === currentUser?._id;
               const canDelete = isCreator || isUploader;
               return (
                 <div
                   key={item._id}
                   tabIndex={0}
-                  className="bg-card-surface hover:bg-hover-surface border border-border-slate p-4 rounded-card flex flex-col justify-between gap-4 transition-all duration-200 group focus:outline-none focus:border-primary shadow-subtle"
+                  className="bg-card-surface hover:bg-[#FAF7F2]/50 border border-border-slate p-4 rounded-card flex flex-col justify-between gap-4 transition-all duration-200 group focus:outline-none focus:border-primary shadow-subtle hover:shadow-card"
                   aria-label={`${item.fileName}, size: ${formatBytes(item.fileSize)}`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
@@ -529,57 +506,60 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
                       {fileIcons[item.fileType] || "📎"}
                     </span>
                     <div className="min-w-0">
-                      <h4 className="text-xs font-bold text-white truncate group-hover:text-primary-light transition" title={item.fileName}>
+                      <h4 className="text-xs font-bold text-primary-text truncate group-hover:text-primary transition" title={item.fileName}>
                         {item.fileName}
                       </h4>
-                      <p className="text-[10px] text-gray-400 font-medium mt-0.5">{formatBytes(item.fileSize)}</p>
+                      <p className="text-[10px] text-muted-text font-medium mt-0.5">{formatBytes(item.fileSize)}</p>
                     </div>
                   </div>
 
-                  <div className="border-t border-border-slate/50 pt-3.5 flex items-center justify-between gap-2">
+                  <div className="border-t border-border-slate/60 pt-3 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex items-center gap-1.5">
                       {item.uploadedBy?.profilePicture ? (
                         <img
                           src={item.uploadedBy.profilePicture}
                           alt={item.uploadedBy.name}
-                          className="w-5 h-5 rounded border border-border-slate shrink-0"
+                          className="w-5 h-5 rounded-full border border-border-slate shrink-0"
                         />
                       ) : (
-                        <div className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-[8px] text-primary-light shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-[8px] text-primary shrink-0">
                           {(item.uploadedBy?.name || "MB").slice(0, 2).toUpperCase()}
                         </div>
                       )}
-                      <span className="text-[9px] text-gray-400 font-medium truncate max-w-[80px]">
+                      <span className="text-[10px] text-muted-text font-medium truncate max-w-[80px]">
                         {item.uploadedBy?.name || "Teammate"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
                       {item.isPlaceholder ? (
-                        <span className="text-[9px] font-bold text-primary-light bg-primary/10 px-2 py-0.5 rounded border border-primary/25 animate-pulse">
+                        <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/25 animate-pulse">
                           Uploading...
                         </span>
                       ) : (
                         <>
                           <button
                             onClick={() => handlePreview(item)}
-                            className="p-1 rounded bg-bg-base border border-border-slate text-[10px] text-primary-light hover:text-white transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-border-slate text-[10px] text-primary-text transition cursor-pointer"
                             aria-label="Preview document"
+                            title="Preview"
                           >
                             👁️
                           </button>
                           <button
                             onClick={() => triggerDownload(item)}
-                            className="p-1 rounded bg-bg-base border border-border-slate text-[10px] text-primary-light hover:text-white transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-border-slate text-[10px] text-primary-text transition cursor-pointer"
                             aria-label="Download document"
+                            title="Download"
                           >
                             ⬇️
                           </button>
                           {canDelete && (
                             <button
                               onClick={() => handleDelete(item._id)}
-                              className="p-1 rounded bg-danger/10 border border-danger/20 text-[10px] text-danger hover:bg-danger/20 transition cursor-pointer"
+                              className="p-1.5 rounded-lg bg-danger/10 border border-danger/20 text-[10px] text-danger hover:bg-danger/20 transition cursor-pointer"
                               aria-label="Delete document"
+                              title="Delete"
                             >
                               🗑️
                             </button>
@@ -599,36 +579,36 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
               <button
                 onClick={() => fetchDocuments(page + 1, true)}
                 disabled={loadingMore}
-                className="px-6 py-2 rounded-btn text-xs font-bold text-gray-300 bg-card-surface border border-border-slate hover:bg-hover-surface transition disabled:opacity-50 flex items-center justify-center gap-2 mx-auto cursor-pointer"
+                className="px-6 py-2.5 rounded-btn text-xs font-bold text-primary-text bg-card-surface border border-border-slate hover:bg-[#FAF7F2] shadow-subtle transition disabled:opacity-50 flex items-center justify-center gap-2 mx-auto cursor-pointer"
               >
-                {loadingMore ? "Loading page..." : "Load More Documents"}
+                {loadingMore ? "Loading more..." : "Load More Documents"}
               </button>
             </div>
           )}
         </>
       ) : (
-        <div className="text-center py-20">
-          <p className="text-xs text-gray-500">No documents found matching the filters.</p>
+        <div className="text-center py-20 bg-card-surface border border-border-slate rounded-card">
+          <p className="text-xs font-semibold text-muted-text">No documents found matching the filters.</p>
         </div>
       )}
 
       {/* IMAGE PREVIEW MODAL */}
       {previewImage && (
-        <div className="fixed inset-0 bg-bg-base/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-bg-secondary border border-border-slate rounded-modal p-5 max-w-2xl w-full relative space-y-4 shadow-premium">
+        <div className="fixed inset-0 bg-secondary-charcoal/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-card-surface border border-border-slate rounded-card p-5 max-w-2xl w-full relative space-y-4 shadow-modal">
             <button
               onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-card-surface border border-border-slate flex items-center justify-center text-sm text-gray-400 hover:text-white transition cursor-pointer animate-fade-in"
+              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-[#FAF7F2] border border-border-slate flex items-center justify-center text-xs text-muted-text hover:text-primary-text transition cursor-pointer"
               aria-label="Close image preview overlay"
             >
               ✕
             </button>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-white truncate max-w-md">{previewImage.fileName}</h3>
-              <p className="text-[10px] text-gray-400">Uploaded by {previewImage.uploadedBy?.name}</p>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-primary-text truncate max-w-md">{previewImage.fileName}</h3>
+              <p className="text-[10px] text-muted-text">Uploaded by {previewImage.uploadedBy?.name}</p>
             </div>
 
-            <div className="w-full bg-bg-base border border-border-slate rounded-card overflow-hidden flex items-center justify-center max-h-[50vh] p-2">
+            <div className="w-full bg-[#FAF7F2] border border-border-slate rounded-input overflow-hidden flex items-center justify-center max-h-[50vh] p-2">
               <img
                 src={previewImage.fileUrl}
                 alt={previewImage.fileName}
@@ -639,13 +619,13 @@ const Documents = ({ projectId, isCreator, currentUser }) => {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setPreviewImage(null)}
-                className="px-5 py-2.5 rounded-btn border border-border-slate text-xs font-bold text-gray-400 hover:text-white hover:bg-hover-surface transition cursor-pointer"
+                className="px-4 py-2 rounded-btn border border-border-slate text-xs font-bold text-muted-text hover:text-primary-text hover:bg-[#FAF7F2] transition cursor-pointer"
               >
                 Close
               </button>
               <button
                 onClick={() => triggerDownload(previewImage)}
-                className="px-5 py-2.5 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover transition cursor-pointer"
+                className="px-5 py-2 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-subtle transition cursor-pointer"
               >
                 Download Image
               </button>

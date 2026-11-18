@@ -63,199 +63,145 @@ const ResetPassword = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!validateForm()) return;
 
     try {
       setLoading(true);
       setApiError("");
       const res = await api.post(`/auth/reset-password/${token}`, {
-        password: formData.password,
-        confirmPassword: formData.confirmPassword
+        password: formData.password
       });
+
       if (res.data.success) {
         setSuccess(true);
         startCountdown();
       }
     } catch (err) {
-      setApiError(err.message || "Failed to reset password. The link may have expired.");
+      setApiError(err.message || "Reset link expired or invalid. Please request a new one.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-base flex items-center justify-center px-4 sm:px-6 pt-24 pb-16 relative">
       <motion.div
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative w-full max-w-md bg-bg-secondary border border-border-slate rounded-card p-8 md:p-10 shadow-premium"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md bg-card-surface border border-border-slate rounded-card p-8 md:p-10 shadow-premium"
       >
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-sm">T</span>
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-orange-sm group-hover:scale-105 transition-transform">
+              <span className="text-white font-black text-lg">TF</span>
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">
-              Team<span className="text-primary-light">Forge</span>
+            <span className="text-xl font-extrabold text-charcoal tracking-tight">
+              Team<span className="text-primary">Forge</span>
             </span>
           </Link>
-          
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-black text-charcoal tracking-tight">
             New Password
           </h2>
-          <p className="text-gray-400 text-sm mt-2">
-            {!success 
-              ? "Set a secure new password for your TeamForge account" 
-              : "Password updated successfully"
-            }
+          <p className="text-text-muted text-sm mt-1.5">
+            Enter your new secure password below
           </p>
         </div>
 
-        {apiError && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6 p-4 rounded-card bg-danger/10 border border-danger/20 text-danger text-sm flex items-center gap-3"
-          >
-            <svg
-              className="w-5 h-5 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <span>{apiError}</span>
-          </motion.div>
-        )}
+        {success ? (
+          <div className="text-center space-y-4 py-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 mx-auto flex items-center justify-center text-2xl">
+              ✓
+            </div>
+            <h3 className="text-base font-bold text-charcoal">Password updated successfully!</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Your password has been changed. Redirecting to login in <strong className="text-primary font-bold">{countdown}</strong> seconds...
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/login"
+                className="inline-block px-6 py-2.5 rounded-btn text-xs font-bold bg-primary hover:bg-primary-hover text-white shadow-orange-sm transition-all"
+              >
+                Sign In Now
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            {apiError && (
+              <div className="mb-6 p-3.5 rounded-btn bg-red-50 border border-red-200 text-danger text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{apiError}</span>
+              </div>
+            )}
 
-        {!success ? (
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Password input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 block">
-                New Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </span>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                  New Password
+                </label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full bg-card-surface border rounded-input py-3 pl-11 pr-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500 ${
-                    validationErrors.password
-                      ? "border-danger/50 focus:border-danger"
-                      : "border-border-slate focus:border-primary"
+                  placeholder="••••••••"
+                  className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white placeholder:text-text-muted ${
+                    validationErrors.password ? "border-danger" : "border-border-slate focus:border-primary"
                   }`}
-                  placeholder="Minimum 8 characters"
-                  disabled={loading}
                 />
+                {validationErrors.password && (
+                  <p className="text-xs text-danger font-semibold">{validationErrors.password}</p>
+                )}
               </div>
-              {validationErrors.password && (
-                <p className="text-xs text-danger mt-1">
-                  {validationErrors.password}
-                </p>
-              )}
-            </div>
 
-            {/* Confirm Password input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 block">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </span>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                  Confirm New Password
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full bg-card-surface border rounded-input py-3 pl-11 pr-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500 ${
-                    validationErrors.confirmPassword
-                      ? "border-danger/50 focus:border-danger"
-                      : "border-border-slate focus:border-primary"
+                  placeholder="••••••••"
+                  className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white placeholder:text-text-muted ${
+                    validationErrors.confirmPassword ? "border-danger" : "border-border-slate focus:border-primary"
                   }`}
-                  placeholder="Repeat your password"
-                  disabled={loading}
                 />
+                {validationErrors.confirmPassword && (
+                  <p className="text-xs text-danger font-semibold">{validationErrors.confirmPassword}</p>
+                )}
               </div>
-              {validationErrors.confirmPassword && (
-                <p className="text-xs text-danger mt-1">
-                  {validationErrors.confirmPassword}
-                </p>
-              )}
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-primary hover:bg-primary-hover text-white rounded-btn text-sm font-bold flex items-center justify-center transition-colors duration-150 shadow-subtle cursor-pointer disabled:opacity-60"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                "Reset Password"
-              )}
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-6 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-success/10 border border-success/20 flex items-center justify-center text-success text-xl">
-              ✓
-            </div>
-            
-            <p className="text-sm text-gray-300">
-              Your password has been successfully updated. You will be redirected to the login page automatically in:
-            </p>
-            <div className="text-3xl font-black text-white font-mono bg-bg-base/50 w-16 h-16 rounded-full border border-border-slate flex items-center justify-center mx-auto">
-              {countdown}
-            </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 rounded-btn text-white font-bold text-sm bg-primary hover:bg-primary-hover shadow-orange transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Resetting Password...</span>
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </button>
+            </form>
 
-            <div className="pt-4 border-t border-border-slate/30">
+            <div className="mt-8 text-center border-t border-border-slate pt-6">
               <Link
                 to="/login"
-                className="text-sm font-bold text-primary hover:text-primary-hover cursor-pointer transition-colors"
+                className="text-xs font-bold text-text-muted hover:text-charcoal transition-colors"
               >
-                Go to Login Now
+                ← Return to Sign In
               </Link>
             </div>
-          </div>
+          </>
         )}
       </motion.div>
     </div>

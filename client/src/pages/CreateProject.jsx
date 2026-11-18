@@ -3,6 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { createProject } from "../services/projectService";
 
+const categories = ["Hackathon", "Startup", "Open Source", "Research", "Personal Project"];
+
 const CreateProject = () => {
   const navigate = useNavigate();
 
@@ -104,10 +106,9 @@ const CreateProject = () => {
     if (!formData.category) errors.category = "Please select a category";
     
     if (skills.length === 0) {
-      errors.skills = "Please add at least one required skill";
+      errors.skills = "Please add at least one required skill tag";
     }
 
-    // GitHub URL regex check
     if (formData.githubUrl.trim()) {
       const gitRegex = /^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+\/?$/;
       if (!gitRegex.test(formData.githubUrl.trim())) {
@@ -115,10 +116,9 @@ const CreateProject = () => {
       }
     }
 
-    // Role checks
     const invalidRoles = roles.some((role) => !role.roleName.trim() || role.vacancies < 1);
     if (invalidRoles) {
-      errors.roles = "All vacancy roles must have a name and at least 1 vacancy";
+      errors.roles = "All vacancy roles must have a name and at least 1 spot";
     }
 
     setValidationErrors(errors);
@@ -149,171 +149,140 @@ const CreateProject = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-base text-text-primary pt-28 pb-20 px-4 sm:px-6 relative">
       <motion.div
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative w-full max-w-2xl bg-bg-secondary border border-border-slate rounded-card p-8 md:p-10 shadow-premium z-10"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-2xl mx-auto bg-card-surface border border-border-slate rounded-card p-8 md:p-10 shadow-premium"
       >
-        <div className="flex items-center justify-between mb-8 border-b border-border-slate pb-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              Post a New Project
+        {/* Header */}
+        <div className="flex items-center justify-between pb-6 border-b border-border-slate mb-6">
+          <div className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary-tint px-3 py-1 rounded-full border border-primary/20">
+              New Initiative
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black text-charcoal tracking-tight">
+              Post a Project Listing
             </h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Connect with fellow student builders and form your team
+            <p className="text-xs md:text-sm text-text-muted">
+              Assemble student developers and designers for your next build
             </p>
           </div>
           <Link
             to="/dashboard"
-            className="text-xs font-semibold text-gray-400 hover:text-white px-3.5 py-2 rounded-btn border border-border-slate hover:bg-hover-surface transition-all cursor-pointer"
+            className="text-xs font-bold text-text-muted hover:text-charcoal bg-[#F8F5EF] px-3 py-1.5 rounded-btn border border-border-slate transition-colors"
           >
             Cancel
           </Link>
         </div>
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6 p-4 rounded-card bg-danger/10 border border-danger/20 text-danger text-sm flex items-center gap-3"
-          >
-            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-6 p-4 rounded-btn bg-red-50 border border-red-200 text-danger text-xs font-semibold flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span>{error}</span>
-          </motion.div>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 block">
-              Project Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className={`w-full bg-card-surface border rounded-input py-3 px-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500 ${
-                validationErrors.title
-                  ? "border-danger/50 focus:border-danger"
-                  : "border-border-slate focus:border-primary"
-              }`}
-              placeholder="e.g. AI-Powered Study Assistant"
-            />
-            {validationErrors.title && (
-              <p className="text-xs text-danger">{validationErrors.title}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 block">
-              Project Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-              className={`w-full bg-card-surface border rounded-input py-3 px-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500 resize-none ${
-                validationErrors.description
-                  ? "border-danger/50 focus:border-danger"
-                  : "border-border-slate focus:border-primary"
-              }`}
-              placeholder="Describe your project, objectives, current progress, and who you are looking for..."
-            />
-            {validationErrors.description && (
-              <p className="text-xs text-danger">{validationErrors.description}</p>
-            )}
-          </div>
-
-          {/* Grid Category & Team size */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 block">
-                Category
+          {/* Section 1: Overview */}
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                Project Title <span className="text-primary">*</span>
               </label>
-              <select
-                name="category"
-                value={formData.category}
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
-                className={`w-full bg-card-surface border rounded-input py-3 px-4 text-white text-sm outline-none transition-colors ${
-                  validationErrors.category
-                    ? "border-danger/50 focus:border-danger"
-                    : "border-border-slate focus:border-primary"
+                placeholder="e.g. AI-Powered Campus Shuttle Tracker"
+                className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white placeholder:text-text-muted ${
+                  validationErrors.title ? "border-danger focus:border-danger" : "border-border-slate focus:border-primary"
                 }`}
-              >
-                <option value="">Select Category</option>
-                <option value="Hackathon">Hackathon</option>
-                <option value="Startup">Startup</option>
-                <option value="Open Source">Open Source</option>
-                <option value="Research">Research</option>
-                <option value="Personal Project">Personal Project</option>
-              </select>
-              {validationErrors.category && (
-                <p className="text-xs text-danger">{validationErrors.category}</p>
+              />
+              {validationErrors.title && (
+                <p className="text-xs text-danger font-semibold">{validationErrors.title}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 block">
-                Max Team Size
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                  Project Category <span className="text-primary">*</span>
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white ${
+                    validationErrors.category ? "border-danger focus:border-danger" : "border-border-slate focus:border-primary"
+                  }`}
+                >
+                  <option value="">Select Category...</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                {validationErrors.category && (
+                  <p className="text-xs text-danger font-semibold">{validationErrors.category}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                  Target Team Size
+                </label>
+                <input
+                  type="number"
+                  name="maxTeamSize"
+                  min="2"
+                  max="20"
+                  value={formData.maxTeamSize}
+                  onChange={handleChange}
+                  className="w-full bg-[#F8F5EF] border border-border-slate focus:border-primary focus:bg-white rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                Project Description <span className="text-primary">*</span>
               </label>
-              <input
-                type="number"
-                name="maxTeamSize"
-                value={formData.maxTeamSize}
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                min={1}
-                max={50}
-                className="w-full bg-card-surface border border-border-slate focus:border-primary rounded-input py-3 px-4 text-white text-sm outline-none transition-colors"
+                rows={4}
+                placeholder="Explain the problem you are solving, your approach, tech stack, and what you are looking for in teammates..."
+                className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white resize-none placeholder:text-text-muted ${
+                  validationErrors.description ? "border-danger focus:border-danger" : "border-border-slate focus:border-primary"
+                }`}
               />
+              {validationErrors.description && (
+                <p className="text-xs text-danger font-semibold">{validationErrors.description}</p>
+              )}
             </div>
           </div>
 
-          {/* Github URL */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 block">
-              GitHub Repository (Optional)
+          {/* Section 2: Skills & Tech Stack */}
+          <div className="space-y-2 border-t border-border-slate pt-5">
+            <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+              Required Skills & Technologies <span className="text-primary">*</span>
             </label>
-            <input
-              type="text"
-              name="githubUrl"
-              value={formData.githubUrl}
-              onChange={handleChange}
-              className={`w-full bg-card-surface border rounded-input py-3 px-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500 ${
-                validationErrors.githubUrl
-                  ? "border-danger/50 focus:border-danger"
-                  : "border-border-slate focus:border-primary"
-              }`}
-              placeholder="e.g. github.com/username/project-repo"
-            />
-            {validationErrors.githubUrl && (
-              <p className="text-xs text-danger">{validationErrors.githubUrl}</p>
-            )}
-          </div>
-
-          {/* Skills tags */}
-          <div className="space-y-2 border-t border-border-slate pt-4">
-            <label className="text-sm font-medium text-gray-300 block">
-              Required Skills
-            </label>
-            <p className="text-xs text-gray-400">Type a skill (e.g. React, Python) and press Enter to add</p>
-            <div className="flex flex-wrap gap-2 mb-2 min-h-[36px] p-2 bg-card-surface border border-border-slate rounded-input">
+            <div className="flex flex-wrap gap-1.5 p-2 bg-[#F8F5EF] border border-border-slate rounded-input min-h-[46px] focus-within:bg-white focus-within:border-primary">
               {skills.map((skill, index) => (
                 <span
                   key={skill}
-                  className="text-xs font-medium bg-primary/10 text-primary-light border border-primary/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5"
+                  className="text-xs font-semibold bg-white text-charcoal border border-border-slate px-2.5 py-0.5 rounded-md flex items-center gap-1.5 shadow-subtle"
                 >
                   {skill}
                   <button
                     type="button"
                     onClick={() => handleRemoveSkill(index)}
-                    className="text-primary-light hover:text-white transition-colors text-[10px] font-black"
+                    className="text-text-muted hover:text-danger text-xs font-bold cursor-pointer"
                   >
                     ×
                   </button>
@@ -324,88 +293,114 @@ const CreateProject = () => {
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={handleKeyDownSkill}
-                className="bg-transparent text-white text-sm outline-none flex-grow min-w-[120px] px-1 py-0.5"
-                placeholder={skills.length === 0 ? "Add tech stacks..." : ""}
+                placeholder={skills.length === 0 ? "Type skill and press Enter (e.g. React, Python, UI/UX)..." : "Add more..."}
+                className="bg-transparent text-charcoal text-xs outline-none flex-grow min-w-[120px] px-1 py-1"
               />
             </div>
             {validationErrors.skills && (
-              <p className="text-xs text-danger">{validationErrors.skills}</p>
+              <p className="text-xs text-danger font-semibold">{validationErrors.skills}</p>
             )}
           </div>
 
-          {/* Vacancies / Roles list */}
-          <div className="space-y-4 border-t border-border-slate pt-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <label className="text-sm font-medium text-gray-300 block">
-                  Vacancies / Open Roles
-                </label>
-                <p className="text-xs text-gray-400">Specify what roles are currently open on your team</p>
-              </div>
+          {/* Section 3: Open Roles */}
+          <div className="space-y-3 border-t border-border-slate pt-5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+                Open Role Vacancies
+              </label>
               <button
                 type="button"
                 onClick={handleAddRole}
-                className="text-xs font-semibold text-primary hover:text-primary-hover px-3 py-1.5 rounded-btn border border-border-slate hover:bg-hover-surface transition-all cursor-pointer"
+                className="text-xs font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 cursor-pointer"
               >
-                + Add Vacancy Role
+                + Add Another Role
               </button>
             </div>
 
-            <div className="space-y-3">
-              {roles.map((role, index) => (
-                <div key={index} className="flex gap-3 items-center">
-                  <input
-                    type="text"
-                    value={role.roleName}
-                    onChange={(e) => handleRoleChange(index, "roleName", e.target.value)}
-                    placeholder="e.g. Backend Developer"
-                    className="flex-grow bg-card-surface border border-border-slate focus:border-primary rounded-input py-2.5 px-4 text-white text-sm outline-none transition-colors"
-                  />
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-400 font-medium">Spots:</label>
+            <div className="space-y-2.5">
+              {roles.map((role, idx) => (
+                <div key={idx} className="flex items-center gap-3 bg-[#FAF8F4] p-3 rounded-card border border-border-slate">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="e.g. Full-Stack Developer, UI/UX Designer"
+                      value={role.roleName}
+                      onChange={(e) => handleRoleChange(idx, "roleName", e.target.value)}
+                      className="w-full bg-white border border-border-slate focus:border-primary rounded-input py-2 px-3 text-charcoal text-xs outline-none"
+                    />
+                  </div>
+                  <div className="w-24">
                     <input
                       type="number"
+                      min="1"
+                      max="10"
+                      title="Available spots"
                       value={role.vacancies}
-                      onChange={(e) => handleRoleChange(index, "vacancies", e.target.value)}
-                      min={1}
-                      className="w-16 bg-card-surface border border-border-slate focus:border-primary rounded-input py-2.5 px-3 text-white text-sm outline-none text-center"
+                      onChange={(e) => handleRoleChange(idx, "vacancies", e.target.value)}
+                      className="w-full bg-white border border-border-slate focus:border-primary rounded-input py-2 px-2 text-center text-charcoal text-xs outline-none"
                     />
                   </div>
                   {roles.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveRole(index)}
-                      className="text-xs font-semibold text-danger hover:text-red-300 px-3 py-2.5 rounded-btn border border-danger/20 hover:bg-danger/5 transition-all"
+                      onClick={() => handleRemoveRole(idx)}
+                      className="text-danger hover:text-red-700 p-1.5 text-xs font-bold cursor-pointer"
+                      title="Remove Role"
                     >
-                      Delete
+                      ×
                     </button>
                   )}
                 </div>
               ))}
             </div>
             {validationErrors.roles && (
-              <p className="text-xs text-danger">{validationErrors.roles}</p>
+              <p className="text-xs text-danger font-semibold">{validationErrors.roles}</p>
+            )}
+          </div>
+
+          {/* Section 4: Repository link */}
+          <div className="space-y-1.5 border-t border-border-slate pt-5">
+            <label className="text-xs font-bold uppercase tracking-wider text-charcoal block">
+              GitHub Repository URL (Optional)
+            </label>
+            <input
+              type="text"
+              name="githubUrl"
+              value={formData.githubUrl}
+              onChange={handleChange}
+              placeholder="https://github.com/organization/repository"
+              className={`w-full bg-[#F8F5EF] border rounded-input py-2.5 px-3.5 text-charcoal text-sm outline-none transition-colors focus:bg-white placeholder:text-text-muted ${
+                validationErrors.githubUrl ? "border-danger focus:border-danger" : "border-border-slate focus:border-primary"
+              }`}
+            />
+            {validationErrors.githubUrl && (
+              <p className="text-xs text-danger font-semibold">{validationErrors.githubUrl}</p>
             )}
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full relative py-3.5 px-4 rounded-btn text-white font-semibold bg-primary hover:bg-primary-hover transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none mt-6 flex items-center justify-center gap-2 cursor-pointer shadow-subtle"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Posting Project...
-              </>
-            ) : (
-              "Create Listing"
-            )}
-          </button>
+          <div className="pt-4 border-t border-border-slate flex gap-4">
+            <Link
+              to="/dashboard"
+              className="flex-1 py-3 px-4 rounded-btn text-xs font-bold text-text-secondary hover:text-charcoal bg-[#F8F5EF] hover:bg-white border border-border-slate text-center transition-all"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 px-4 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-orange transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Publishing Project...</span>
+                </>
+              ) : (
+                "Publish Project Listing"
+              )}
+            </button>
+          </div>
         </form>
       </motion.div>
     </div>

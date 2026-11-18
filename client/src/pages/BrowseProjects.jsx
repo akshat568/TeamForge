@@ -42,68 +42,80 @@ const BrowseProjects = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchProjects();
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-bg-base text-white pt-28 pb-16 px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-base text-text-primary pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative">
       <div className="max-w-7xl mx-auto relative z-10">
+        
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div>
-            <span className="text-xs font-semibold text-primary-light uppercase tracking-widest bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary-tint px-3 py-1 rounded-full border border-primary/20">
               Discover Teams
             </span>
-            <h1 className="text-3xl md:text-5xl font-black mt-4 tracking-tight">
-              Explore Active <span className="gradient-text">Projects</span>
+            <h1 className="text-3xl md:text-5xl font-black text-charcoal tracking-tight">
+              Explore Active <span className="text-primary">Projects</span>
             </h1>
-            <p className="text-gray-400 text-sm md:text-base mt-2 max-w-xl">
-              Find projects that match your skills, interest, or academic goals and apply to collaborate.
+            <p className="text-text-muted text-sm md:text-base max-w-xl leading-relaxed">
+              Find campus hackathons, student startups, and open-source projects looking for your exact skills and experience.
             </p>
           </div>
           <div>
             <Link
               to="/projects/new"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-btn font-semibold text-white bg-primary hover:bg-primary-hover shadow-subtle transition-all duration-200"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-btn font-bold text-sm text-white bg-primary hover:bg-primary-hover shadow-orange transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
               </svg>
-              Post a Project
+              <span>Post a Project</span>
             </Link>
           </div>
         </div>
 
         {/* Filter Controls Panel */}
-        <div className="bg-bg-secondary border border-border-slate p-6 rounded-card mb-10 space-y-6 shadow-subtle">
+        <div className="bg-card-surface border border-border-slate p-5 md:p-6 rounded-card mb-10 space-y-4 shadow-subtle">
           {/* Search bar */}
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted pointer-events-none">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by title, description, or key skills..."
-              className="w-full bg-card-surface border border-border-slate focus:border-primary rounded-input py-4 pl-12 pr-4 text-white text-sm outline-none transition-colors placeholder:text-gray-500"
+              placeholder="Search by title, description, keywords, or skills (e.g. React, Python, UI/UX)..."
+              className="w-full bg-[#F8F5EF] border border-border-slate focus:border-primary focus:bg-white rounded-input py-3.5 pl-12 pr-4 text-charcoal text-sm outline-none transition-colors placeholder:text-text-muted"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs font-bold text-text-muted hover:text-charcoal cursor-pointer"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {/* Categories Tab Selector */}
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-muted mr-1">
+              Category:
+            </span>
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4.5 py-2.5 rounded-btn text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-btn text-xs font-bold transition-all duration-200 cursor-pointer ${
                   selectedCategory === category
-                    ? "bg-primary text-white border-transparent scale-[1.01]"
-                    : "bg-card-surface border-border-slate text-gray-400 hover:text-white hover:border-primary"
+                    ? "bg-primary text-white shadow-orange-sm"
+                    : "bg-[#F8F5EF] border border-border-slate text-charcoal hover:border-primary/40 hover:bg-white"
                 }`}
               >
                 {category}
@@ -117,45 +129,56 @@ const BrowseProjects = () => {
           /* Skeletons loader */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card-surface border border-border-slate rounded-card p-6 h-60 animate-pulse flex flex-col justify-between">
+              <div key={i} className="bg-card-surface border border-border-slate rounded-card p-6 h-64 animate-pulse flex flex-col justify-between">
                 <div className="space-y-4">
-                  <div className="h-6 bg-primary/10 rounded w-1/3" />
-                  <div className="h-7 bg-bg-base/40 rounded w-3/4" />
+                  <div className="h-6 bg-primary-tint rounded-full w-1/3" />
+                  <div className="h-6 bg-[#F0EAE1] rounded w-3/4" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-bg-base/40 rounded w-full" />
-                    <div className="h-4 bg-bg-base/40 rounded w-5/6" />
+                    <div className="h-4 bg-[#F0EAE1] rounded w-full" />
+                    <div className="h-4 bg-[#F0EAE1] rounded w-4/5" />
                   </div>
                 </div>
-                <div className="h-10 bg-primary/10 rounded w-full mt-4" />
+                <div className="h-10 bg-[#F8F5EF] rounded-btn w-full mt-4" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16 bg-bg-secondary border border-danger/20 rounded-card shadow-subtle">
-            <p className="text-danger text-lg mb-4">{error}</p>
-            <button onClick={fetchProjects} className="px-5 py-2.5 rounded-btn text-sm font-semibold bg-primary hover:bg-primary-hover text-white transition-colors duration-200">
-              Retry
+          <div className="text-center py-16 bg-card-surface border border-danger/20 rounded-card shadow-subtle space-y-4">
+            <p className="text-danger font-semibold text-base">{error}</p>
+            <button
+              onClick={fetchProjects}
+              className="px-6 py-2.5 rounded-btn text-xs font-bold bg-primary hover:bg-primary-hover text-white shadow-orange-sm transition-colors duration-200 cursor-pointer"
+            >
+              Retry Loading
             </button>
           </div>
         ) : projects.length === 0 ? (
           /* Empty state */
-          <div className="text-center py-20 bg-bg-secondary border border-border-slate rounded-card shadow-subtle">
-            <svg className="w-16 h-16 text-primary-light/40 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2m0 0V6a2 2 0 012-2h12a2 2 0 012 2v12" />
-            </svg>
-            <h3 className="text-xl font-bold text-white mb-2">No projects found</h3>
-            <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed">
-              We couldn't find any listings matching your current filter set. Try broadening your keywords.
+          <div className="text-center py-20 bg-card-surface border border-border-slate rounded-card shadow-subtle space-y-4">
+            <div className="w-16 h-16 rounded-full bg-primary-tint mx-auto flex items-center justify-center text-primary text-2xl">
+              🔍
+            </div>
+            <h3 className="text-xl font-bold text-charcoal">No matching projects found</h3>
+            <p className="text-text-muted text-sm max-w-sm mx-auto leading-relaxed">
+              We couldn't find any listings matching your current search or category filter. Try clearing filters or posting a new listing.
             </p>
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("All");
-              }}
-              className="mt-6 text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
-            >
-              Reset Filters
-            </button>
+            <div className="pt-2 flex justify-center gap-3">
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("All");
+                }}
+                className="px-5 py-2.5 rounded-btn text-xs font-bold text-primary bg-primary-tint hover:bg-primary-tint-hover border border-primary/20 transition-colors cursor-pointer"
+              >
+                Reset All Filters
+              </button>
+              <Link
+                to="/projects/new"
+                className="px-5 py-2.5 rounded-btn text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-orange-sm transition-colors cursor-pointer"
+              >
+                Create First Listing
+              </Link>
+            </div>
           </div>
         ) : (
           /* Projects grid list */

@@ -1,8 +1,27 @@
 import axios from "axios";
 
+// ─── Base URL Resolution ───────────────────────────────────────────────────────
+// Gracefully resolves API base URL:
+// 1. Uses VITE_API_URL if configured.
+// 2. Normalizes trailing slashes and ensures single '/api' suffix.
+// 3. Falls back gracefully in PROD to production Render backend and in DEV to localhost:5000.
+// This prevents `/undefined/api/...` routing errors if environment variables are not set.
+const resolveBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  const rawUrl =
+    typeof envUrl === "string" && envUrl.trim() !== ""
+      ? envUrl.trim()
+      : import.meta.env.PROD
+      ? "https://teamforge-uy0n.onrender.com"
+      : "http://localhost:5000";
+
+  const cleaned = rawUrl.replace(/\/+$/, "");
+  return cleaned.endsWith("/api") ? cleaned : `${cleaned}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL + "/api",
-  timeout: 10000,
+  baseURL: resolveBaseURL(),
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },

@@ -48,9 +48,18 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    // Connect to backend Socket.io server
+    // Connect to backend Socket.io server with fallback
     const token = localStorage.getItem("token");
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL;
+    const rawSocketUrl =
+      (import.meta.env.VITE_SOCKET_URL && import.meta.env.VITE_SOCKET_URL.trim() !== "")
+        ? import.meta.env.VITE_SOCKET_URL.trim()
+        : (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim() !== "")
+        ? import.meta.env.VITE_API_URL.trim()
+        : import.meta.env.PROD
+        ? "https://teamforge-uy0n.onrender.com"
+        : "http://localhost:5000";
+
+    const SOCKET_URL = rawSocketUrl.replace(/\/+$/, "").replace(/\/api$/, "");
 
     const newSocket = io(SOCKET_URL, {
       auth: { token },

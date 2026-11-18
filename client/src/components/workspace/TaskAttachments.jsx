@@ -71,14 +71,12 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
     if (!socket) return;
 
     const handleUploaded = (attachment) => {
-      // Check if attachment belongs to this task card
       if (attachment.task !== taskId) return;
 
       setAttachments((prev) => {
         const existingIdx = prev.findIndex((a) => a._id === attachment._id);
         if (existingIdx !== -1) {
           const existing = prev[existingIdx];
-          // Version safety: Compare timestamps to prevent out of order syncs
           if (new Date(existing.updatedAt) >= new Date(attachment.updatedAt)) {
             return prev;
           }
@@ -119,7 +117,6 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
 
     setUploadQueue((prev) => [...prev, queueItem]);
 
-    // Optimistic UI placeholder card insert
     const ext = file.name.split(".").pop().toLowerCase();
     const fileType = getFileType(ext);
     const placeholder = {
@@ -131,9 +128,9 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
       mimeType: file.type,
       fileUrl: "",
       uploadedBy: {
-        _id: currentUser._id,
-        name: currentUser.name,
-        profilePicture: currentUser.profilePicture,
+        _id: currentUser?._id,
+        name: currentUser?.name,
+        profilePicture: currentUser?.profilePicture,
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -225,13 +222,13 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
   };
 
   return (
-    <div className="space-y-4 pt-2 border-t border-border-slate">
+    <div className="space-y-3 pt-3 border-t border-border-slate">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-gray-400">Attachments</label>
+        <label className="text-xs font-bold text-muted-text uppercase tracking-wider">Attachments</label>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="text-[10px] font-bold text-primary hover:text-primary-hover transition-colors duration-200 cursor-pointer"
+          className="text-xs font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer flex items-center gap-1"
         >
           + Add File
         </button>
@@ -247,26 +244,26 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
 
       {/* Upload Queue Manager */}
       {uploadQueue.length > 0 && (
-        <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
           {uploadQueue.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-2 rounded-card bg-card-surface/40 border border-border-slate text-[10px]">
-              <span className="font-semibold text-white truncate max-w-[150px]">{item.name}</span>
+            <div key={item.id} className="flex items-center justify-between p-2.5 rounded-card bg-[#FAF7F2] border border-border-slate text-[10px]">
+              <span className="font-bold text-primary-text truncate max-w-[150px]">{item.name}</span>
               {item.status === "uploading" ? (
                 <div className="flex items-center gap-2 flex-1 justify-end ml-4">
-                  <div className="w-16 bg-bg-base h-1 rounded-full overflow-hidden shrink-0">
-                    <div className="gradient-bg h-full" style={{ width: `${item.progress}%` }} />
+                  <div className="w-16 bg-[#E9E4DA] h-1.5 rounded-full overflow-hidden shrink-0">
+                    <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${item.progress}%` }} />
                   </div>
                   <span className="text-primary font-bold shrink-0">{item.progress}%</span>
                   <button
                     type="button"
                     onClick={() => cancelUpload(item.id)}
-                    className="text-danger hover:text-red-300 ml-1 shrink-0 font-bold cursor-pointer"
+                    className="text-danger hover:text-red-700 ml-1 shrink-0 font-bold cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
               ) : (
-                <span className="text-danger ml-2 truncate">{item.error}</span>
+                <span className="text-danger ml-2 truncate font-semibold">{item.error}</span>
               )}
             </div>
           ))}
@@ -277,29 +274,29 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
       {loading ? (
         <div className="space-y-2">
           {[...Array(2)].map((_, idx) => (
-            <div key={idx} className="h-10 rounded-card bg-card-surface/50 animate-pulse border border-border-slate" />
+            <div key={idx} className="h-10 rounded-card bg-[#FAF7F2] animate-pulse border border-border-slate" />
           ))}
         </div>
       ) : attachments.length > 0 ? (
-        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
           {attachments.map((item) => {
-            const isUploader = item.uploadedBy?._id === currentUser._id;
+            const isUploader = item.uploadedBy?._id === currentUser?._id;
             const canDelete = isCreator || isUploader;
 
             return (
               <div
                 key={item._id}
                 tabIndex={0}
-                className="flex items-center justify-between p-2.5 rounded-card bg-card-surface/60 hover:bg-hover-surface border border-border-slate group text-xs focus:outline-none focus:border-primary transition-all duration-200"
+                className="flex items-center justify-between p-2.5 rounded-card bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-border-slate group text-xs focus:outline-none focus:border-primary transition-all duration-200"
                 aria-label={`${item.fileName}, size: ${formatBytes(item.fileSize)}`}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-lg select-none">{fileIcons[item.fileType] || "📎"}</span>
+                  <span className="text-base select-none">{fileIcons[item.fileType] || "📎"}</span>
                   <div className="min-w-0">
-                    <h5 className="font-semibold text-white truncate max-w-[160px]" title={item.fileName}>
+                    <h5 className="font-bold text-primary-text truncate max-w-[160px]" title={item.fileName}>
                       {item.fileName}
                     </h5>
-                    <p className="text-[9px] text-gray-400">{formatBytes(item.fileSize)}</p>
+                    <p className="text-[9px] text-muted-text font-medium">{formatBytes(item.fileSize)}</p>
                   </div>
                 </div>
 
@@ -311,16 +308,18 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
                       <button
                         type="button"
                         onClick={() => handlePreview(item)}
-                        className="p-1 rounded bg-bg-base text-[10px] text-primary hover:text-white transition cursor-pointer"
+                        className="p-1 rounded bg-white hover:bg-white/80 border border-border-slate text-[10px] text-primary-text transition cursor-pointer"
                         aria-label="Preview task attachment"
+                        title="Preview"
                       >
                         👁️
                       </button>
                       <button
                         type="button"
                         onClick={() => triggerDownload(item)}
-                        className="p-1 rounded bg-bg-base text-[10px] text-primary hover:text-white transition cursor-pointer"
+                        className="p-1 rounded bg-white hover:bg-white/80 border border-border-slate text-[10px] text-primary-text transition cursor-pointer"
                         aria-label="Download task attachment"
+                        title="Download"
                       >
                         ⬇️
                       </button>
@@ -330,6 +329,7 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
                           onClick={() => handleDelete(item._id)}
                           className="p-1 rounded bg-danger/10 text-[10px] text-danger hover:bg-danger/20 transition cursor-pointer"
                           aria-label="Delete task attachment"
+                          title="Delete"
                         >
                           🗑️
                         </button>
@@ -342,24 +342,24 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
           })}
         </div>
       ) : (
-        <p className="text-center text-[10px] text-gray-500 py-2.5">No attachments linked to this task card.</p>
+        <p className="text-center text-[11px] text-muted-text py-2">No attachments linked to this task card.</p>
       )}
 
       {/* Image Preview Modal */}
       {previewImage && (
-        <div className="fixed inset-0 bg-bg-base/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-bg-secondary border border-border-slate rounded-modal p-5 max-w-lg w-full relative space-y-4 shadow-premium">
+        <div className="fixed inset-0 bg-secondary-charcoal/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-card-surface border border-border-slate rounded-card p-5 max-w-lg w-full relative space-y-4 shadow-modal">
             <button
               onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-card-surface border border-border-slate flex items-center justify-center text-sm text-gray-400 hover:text-white transition cursor-pointer"
+              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-[#FAF7F2] border border-border-slate flex items-center justify-center text-xs text-muted-text hover:text-primary-text transition cursor-pointer"
               aria-label="Close image preview overlay"
             >
               ✕
             </button>
             <div className="space-y-0.5">
-              <h3 className="text-xs font-bold text-white truncate">{previewImage.fileName}</h3>
+              <h3 className="text-xs font-bold text-primary-text truncate">{previewImage.fileName}</h3>
             </div>
-            <div className="w-full bg-bg-base border border-border-slate rounded-card overflow-hidden flex items-center justify-center max-h-[40vh] p-2">
+            <div className="w-full bg-[#FAF7F2] border border-border-slate rounded-input overflow-hidden flex items-center justify-center max-h-[40vh] p-2">
               <img
                 src={previewImage.fileUrl}
                 alt={previewImage.fileName}
@@ -370,7 +370,7 @@ const TaskAttachments = ({ projectId, taskId, isCreator, currentUser }) => {
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="px-4 py-2 rounded-btn border border-border-slate text-[11px] font-bold text-gray-400 hover:text-white hover:bg-hover-surface transition cursor-pointer"
+                className="px-4 py-2 rounded-btn border border-border-slate text-[11px] font-bold text-muted-text hover:text-primary-text hover:bg-[#FAF7F2] transition cursor-pointer"
               >
                 Close
               </button>

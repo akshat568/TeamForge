@@ -18,26 +18,23 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
   const [chatMessages, setChatMessages] = useState([
     {
       role: "assistant",
-      content: "Hello! I am your AI Workspace Assistant. Ask me questions about the team, tasks, and resource list, or click a Quick Action to run project analysis.",
+      content: "Hello! I am your AI Workspace Copilot. Ask me about tasks, project milestones, or click a Quick Action above to plan sprints and generate specifications.",
     },
   ]);
   const [chatInput, setChatInput] = useState("");
   const [historyItems, setHistoryItems] = useState([]);
 
   // Active generation results
-  const [activeOutput, setActiveOutput] = useState(null); // { type, data }
+  const [activeOutput, setActiveOutput] = useState(null);
   const [suggestedActions, setSuggestedActions] = useState([]);
 
   // Loading states
   const [loading, setLoading] = useState(false);
-  const [loadingType, setLoadingType] = useState(""); // "tasks", "summary", etc.
+  const [loadingType, setLoadingType] = useState("");
   const [progressText, setProgressText] = useState("");
   
-  // Abort controller for cancellation
   const abortControllerRef = useRef(null);
   const chatEndRef = useRef(null);
-
-  // Typewriter output states
   const [displayedText, setDisplayedText] = useState("");
   const typewriterTimerRef = useRef(null);
 
@@ -60,25 +57,6 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, loading]);
-
-  // ─── 2. TYPEWRITER EFFECT ────────────────────────────────────────────────
-  const runTypewriter = (text, callback) => {
-    clearInterval(typewriterTimerRef.current);
-    setDisplayedText("");
-    if (!text) return;
-
-    let index = 0;
-    const speed = text.length > 500 ? 5 : 12; // Speed up long texts
-
-    typewriterTimerRef.current = setInterval(() => {
-      setDisplayedText((prev) => prev + text.charAt(index));
-      index++;
-      if (index >= text.length) {
-        clearInterval(typewriterTimerRef.current);
-        if (callback) callback();
-      }
-    }, speed);
-  };
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -106,22 +84,20 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
   const runAiRequest = async (type, apiCall, followUpSuggestions = []) => {
     if (loading) return;
     
-    // Set up abort controller
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
     setLoading(true);
     setLoadingType(type);
     setDisplayedText("");
-    setProgressText("Initializing AI model handshake...");
+    setProgressText("Connecting to Gemini AI engine...");
 
     try {
-      // Estimated timeline ticks
       const progressSteps = [
-        "Constructing workspace context maps...",
-        "Evaluating sprint Kanban backlogs...",
-        "Querying OpenAI Provider tokens...",
-        "Generating structured response...",
+        "Analyzing workspace repository & backlogs...",
+        "Formulating structured task cards...",
+        "Evaluating sprint dependencies...",
+        "Synthesizing production recommendations...",
       ];
       
       let stepIndex = 0;
@@ -130,7 +106,7 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
           setProgressText(progressSteps[stepIndex]);
           stepIndex++;
         }
-      }, 2500);
+      }, 2000);
 
       const response = await apiCall(signal);
       clearInterval(progressTimer);
@@ -139,7 +115,6 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
       setLoadingType("");
       setProgressText("");
 
-      // Render output with typewriter effect
       let outputData = response;
       if (type === "summary" && response && response.data) {
         outputData = response.data;
@@ -147,12 +122,10 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
       setActiveOutput({ type, data: outputData });
       setSuggestedActions(followUpSuggestions);
 
-      // Trigger history reload
       fetchHistory();
 
     } catch (err) {
       if (err.name === "CanceledError" || err.message === "canceled" || signal.aborted) {
-        console.log("Axios request aborted by client.");
         return;
       }
       console.error(err);
@@ -229,10 +202,8 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
     const userMessage = chatInput;
     setChatInput("");
     
-    // Add user message to screen
     setChatMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     
-    // Setup abort controller
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
@@ -240,7 +211,6 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
     setLoadingType("chat");
 
     try {
-      // Gather last 4 chat messages for history
       const history = chatMessages.slice(-4).map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -250,7 +220,6 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
       setLoading(false);
       setLoadingType("");
       
-      // Append AI response
       setChatMessages((prev) => [...prev, { role: "assistant", content: res.response }]);
       setSuggestedActions(["Generate Tasks", "Daily Standup"]);
       fetchHistory();
@@ -331,7 +300,7 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
       });
       if (res.success) {
         if (onTaskCreated) onTaskCreated(res.task);
-        alert(`Successfully created task: "${taskItem.title}"`);
+        alert(`Successfully added task to board: "${taskItem.title}"`);
       }
     } catch (e) {
       alert(`Failed to create task: ${e.message}`);
@@ -370,7 +339,6 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
     if (onTaskCreated) onTaskCreated();
   };
 
-  // ─── 9. MARKDOWN DOWNLOAD UTILITIES ─────────────────────────────────────
   const downloadMarkdownFile = (filename, content) => {
     const element = document.createElement("a");
     const file = new Blob([content], { type: "text/markdown" });
@@ -387,19 +355,23 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
   };
 
   return (
-    <div className="flex flex-col xl:flex-row gap-6 min-h-[500px] z-10 relative">
+    <div className="flex flex-col xl:flex-row gap-6 min-h-[500px]">
       
       {/* LEFT COLUMN: CONVERSATIONAL CHAT & HISTORY */}
-      <div className="w-full xl:w-96 flex flex-col gap-6 shrink-0">
+      <div className="w-full xl:w-96 flex flex-col gap-5 shrink-0">
         
         {/* Workspace Chat Panel */}
-        <div className="bg-bg-secondary border border-border-slate rounded-card p-4 flex flex-col h-[380px] shadow-subtle">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-primary-light border-b border-border-slate pb-2 mb-3">
-            AI Teammate Chat
-          </h3>
+        <div className="bg-[#FAF8F4] border border-border-slate rounded-card p-4 flex flex-col h-[380px] shadow-subtle">
+          <div className="flex items-center justify-between border-b border-border-slate pb-2.5 mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-charcoal flex items-center gap-1.5">
+              <span className="text-primary font-black">AI</span>
+              <span>Copilot Chat</span>
+            </h3>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
           
           {/* Messages Feed */}
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs mb-3">
+          <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs mb-3">
             {chatMessages.map((msg, idx) => (
               <div
                 key={idx}
@@ -408,8 +380,8 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                 <div
                   className={`max-w-[85%] rounded-card px-3.5 py-2.5 leading-relaxed break-words shadow-subtle ${
                     msg.role === "user"
-                      ? "bg-primary text-white font-medium animate-none"
-                      : "bg-card-surface border border-border-slate text-gray-300"
+                      ? "bg-primary text-white font-medium"
+                      : "bg-white border border-border-slate text-charcoal font-medium"
                   }`}
                 >
                   {msg.content}
@@ -419,7 +391,7 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
 
             {loading && loadingType === "chat" && (
               <div className="flex justify-start">
-                <div className="bg-card-surface border border-border-slate text-primary rounded-card px-4 py-3 flex items-center gap-1.5 shadow-subtle">
+                <div className="bg-white border border-border-slate text-primary rounded-card px-3.5 py-2.5 flex items-center gap-1.5 shadow-subtle">
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
@@ -435,60 +407,54 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask me about this workspace..."
-              className="flex-1 bg-card-surface border border-border-slate focus:border-primary rounded-input px-3 py-2 text-xs text-white outline-none"
+              placeholder="Ask about tasks, sprints..."
+              className="flex-1 bg-white border border-border-slate focus:border-primary rounded-input px-3 py-2 text-xs text-charcoal outline-none placeholder:text-text-muted"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !chatInput.trim()}
-              className="px-3.5 py-2 rounded-btn bg-primary text-xs font-bold text-white hover:bg-primary-hover transition-all duration-200 cursor-pointer disabled:opacity-50"
+              className="px-3.5 py-2 rounded-btn bg-primary text-xs font-bold text-white hover:bg-primary-hover shadow-orange-sm transition-all cursor-pointer disabled:opacity-50"
             >
-              Ask
+              Send
             </button>
           </form>
         </div>
 
         {/* Prompt History Panel */}
-        <div className="bg-bg-secondary border border-border-slate rounded-card p-4 flex flex-col h-[280px] shadow-subtle">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-primary-light border-b border-border-slate pb-2 mb-3">
+        <div className="bg-[#FAF8F4] border border-border-slate rounded-card p-4 flex flex-col h-[260px] shadow-subtle">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-charcoal border-b border-border-slate pb-2.5 mb-2.5">
             Prompt History Archive
           </h3>
           
           {historyItems.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-center">
-              <span className="text-gray-500 text-xs italic">No history records found</span>
+              <span className="text-text-muted text-xs italic">No prior prompts recorded</span>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {historyItems.map((item) => {
-                const date = new Date(item.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
-                return (
-                  <div
-                    key={item._id}
-                    className="p-2.5 bg-card-surface border border-border-slate hover:bg-hover-surface rounded-card flex justify-between items-center transition-all duration-200 group"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[9px] bg-primary/10 text-primary-light px-1.5 py-0.5 rounded border border-primary/20 font-bold uppercase">
-                        {item.actionType.replace("-", " ")}
-                      </span>
-                      <p className="text-[10px] text-gray-300 mt-1 truncate font-medium">
-                        {item.promptText}
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleReopenHistory(item)}
-                      className="px-2.5 py-1 bg-primary/10 text-primary-light hover:bg-primary hover:text-white rounded-btn text-[9px] font-bold transition-all ml-2 cursor-pointer"
-                    >
-                      Reopen
-                    </button>
+              {historyItems.map((item) => (
+                <div
+                  key={item._id}
+                  className="p-2.5 bg-white border border-border-slate hover:border-primary/40 rounded-card flex justify-between items-center transition-all shadow-subtle group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9px] bg-primary-tint text-primary px-1.5 py-0.5 rounded border border-primary/20 font-bold uppercase">
+                      {item.actionType.replace("-", " ")}
+                    </span>
+                    <p className="text-[11px] text-charcoal mt-1 truncate font-medium">
+                      {item.promptText}
+                    </p>
                   </div>
-                );
-              })}
+                  
+                  <button
+                    onClick={() => handleReopenHistory(item)}
+                    className="px-2 py-1 bg-[#F8F5EF] hover:bg-primary hover:text-white rounded text-[10px] font-bold text-text-secondary transition-all ml-2 cursor-pointer shrink-0"
+                  >
+                    Reopen
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -496,10 +462,10 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
       </div>
 
       {/* RIGHT COLUMN: QUICK ACTIONS DASHBOARD */}
-      <div className="flex-1 flex flex-col gap-6 min-w-0">
+      <div className="flex-1 flex flex-col gap-5 min-w-0">
         
         {/* Quick Action Tiles Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
           {[
             { label: "Tasks", fn: handleGenerateTasks, type: "tasks" },
             { label: "Summary", fn: handleGetSummary, type: "summary" },
@@ -513,10 +479,10 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
               key={action.label}
               onClick={action.fn}
               disabled={loading}
-              className={`px-3 py-2.5 rounded-btn border font-bold text-xs hover:scale-[1.02] transition-all duration-200 text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-2.5 py-2 rounded-btn border text-xs font-bold transition-all text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 loadingType === action.type
-                  ? "bg-primary border-primary text-white shadow-subtle"
-                  : "bg-bg-secondary border-border-slate text-gray-400 hover:text-white hover:border-primary"
+                  ? "bg-primary border-primary text-white shadow-orange-sm"
+                  : "bg-white border-border-slate text-charcoal hover:border-primary/50 hover:bg-primary-tint"
               }`}
             >
               {action.label}
@@ -525,24 +491,24 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
         </div>
 
         {/* Output Panel Screen */}
-        <div className="flex-grow bg-bg-secondary border border-border-slate rounded-modal p-6 flex flex-col min-h-[400px] shadow-premium relative overflow-hidden">
+        <div className="flex-grow bg-[#FAF8F4] border border-border-slate rounded-card p-6 flex flex-col min-h-[400px] shadow-subtle relative overflow-hidden">
           
           {/* CANCELLATION LAYER OVERLAY */}
           {loading && (
-            <div className="absolute inset-0 bg-bg-base/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-center space-y-4">
-              <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="absolute inset-0 bg-white/92 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-center space-y-4">
+              <div className="w-9 h-9 border-3 border-primary border-t-transparent rounded-full animate-spin" />
               <div className="space-y-1">
-                <h4 className="font-black text-sm text-white tracking-tight animate-pulse">
-                  AI Generator is building assets...
+                <h4 className="font-black text-sm text-charcoal tracking-tight">
+                  Gemini AI Copilot is building output...
                 </h4>
-                <p className="text-xs text-gray-400 font-medium italic">{progressText}</p>
+                <p className="text-xs text-text-muted font-medium italic">{progressText}</p>
               </div>
               
               <button
                 onClick={handleCancelGeneration}
-                className="px-5 py-2.5 rounded-btn border border-danger/20 hover:border-danger bg-danger/10 text-danger hover:bg-danger hover:text-white text-xs font-bold transition-all duration-200 cursor-pointer"
+                className="px-4 py-2 rounded-btn border border-red-200 bg-red-50 text-danger hover:bg-red-100 text-xs font-bold transition-all cursor-pointer"
               >
-                Cancel Generation
+                Cancel Request
               </button>
             </div>
           )}
@@ -550,12 +516,12 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
           {/* DYNAMIC RENDERING OUTPUTS CARD */}
           {!activeOutput ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-light font-black text-lg">
+              <div className="w-12 h-12 rounded-xl bg-primary-tint border border-primary/20 flex items-center justify-center text-primary font-black text-lg">
                 🤖
               </div>
-              <h3 className="font-bold text-white text-sm">No Action Running</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Click any of the Quick Action buttons above to generate tasks, documents, standups, or health metrics.
+              <h3 className="font-extrabold text-charcoal text-sm">Select an AI Capability</h3>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Click any of the action buttons above to generate backlogs, architecture docs, daily standups, or health metrics.
               </p>
             </div>
           ) : (
@@ -563,7 +529,7 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
               
               {/* Output Header */}
               <div className="flex justify-between items-center border-b border-border-slate pb-3 shrink-0">
-                <span className="text-xs font-bold text-primary-light uppercase tracking-widest bg-primary/10 px-2.5 py-1 rounded border border-primary/20">
+                <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary-tint px-2.5 py-1 rounded-full border border-primary/20">
                   Generated {activeOutput.type}
                 </span>
                 
@@ -572,9 +538,9 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => copyToClipboard(activeOutput.data.markdown)}
-                      className="px-3 py-1.5 rounded-lg border border-border-slate hover:bg-hover-surface text-xs text-gray-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-btn border border-border-slate bg-white hover:bg-[#F8F5EF] text-xs text-charcoal font-bold transition-colors cursor-pointer"
                     >
-                      Copy
+                      Copy Markdown
                     </button>
                     <button
                       onClick={() =>
@@ -583,9 +549,9 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                           activeOutput.data.markdown
                         )
                       }
-                      className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-btn bg-primary hover:bg-primary-hover text-xs font-bold text-white shadow-orange-sm transition-all cursor-pointer"
                     >
-                      Download
+                      Download .md
                     </button>
                   </div>
                 )}
@@ -593,9 +559,9 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                 {activeOutput.type === "tasks" && (
                   <button
                     onClick={() => handleCreateAllTasks(activeOutput.data.tasks)}
-                    className="px-4 py-1.5 rounded-btn bg-primary hover:bg-primary-hover text-xs font-bold text-white hover:scale-[1.02] transition-all cursor-pointer"
+                    className="px-4 py-1.5 rounded-btn bg-primary hover:bg-primary-hover text-xs font-bold text-white shadow-orange-sm transition-all cursor-pointer"
                   >
-                    Create All Tasks
+                    Add All to Board
                   </button>
                 )}
               </div>
@@ -605,33 +571,33 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                 
                 {/* 1. TASKS LIST SUGGESTIONS */}
                 {activeOutput.type === "tasks" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {activeOutput.data.tasks?.map((t, idx) => (
                       <div
                         key={idx}
-                        className="p-4 bg-card-surface/50 border border-border-slate rounded-card flex flex-col justify-between shadow-subtle"
+                        className="p-4 bg-white border border-border-slate rounded-card flex flex-col justify-between shadow-subtle space-y-3"
                       >
                         <div>
                           <div className="flex justify-between items-start gap-2 mb-2">
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase ${
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${
                               t.priority === "High"
-                                ? "bg-danger/10 text-danger border-danger/20"
+                                ? "bg-red-50 text-danger border-red-200"
                                 : t.priority === "Medium"
-                                ? "bg-warning/10 text-warning border-warning/20"
-                                : "bg-primary/10 text-primary-light border-primary/20"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-sky-50 text-sky-700 border-sky-200"
                             }`}>
-                              {t.priority}
+                              {t.priority} Priority
                             </span>
                           </div>
-                          <h4 className="font-bold text-xs text-white leading-snug">{t.title}</h4>
-                          <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">{t.description}</p>
+                          <h4 className="font-bold text-xs text-charcoal leading-snug">{t.title}</h4>
+                          <p className="text-[11px] text-text-muted mt-1 leading-relaxed">{t.description}</p>
                         </div>
                         
-                        <div className="border-t border-border-slate/50 pt-3 mt-3 flex justify-between items-center">
-                          <span className="text-[10px] text-primary-light font-bold">Todo Column</span>
+                        <div className="border-t border-border-slate pt-2.5 flex justify-between items-center">
+                          <span className="text-[10px] text-text-muted font-semibold">To Do Column</span>
                           <button
                             onClick={() => handleCreateTaskItem(t)}
-                            className="px-3 py-1 bg-primary/10 text-primary-light hover:bg-primary hover:text-white rounded-btn text-[9px] font-bold transition-all cursor-pointer"
+                            className="px-3 py-1 bg-primary-tint text-primary hover:bg-primary hover:text-white rounded-btn text-[10px] font-bold transition-all cursor-pointer"
                           >
                             + Add Card
                           </button>
@@ -644,28 +610,28 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                 {/* 2. SUMMARY CARD */}
                 {activeOutput.type === "summary" && (
                   <div className="space-y-4">
-                    <div className="bg-card-surface border border-border-slate rounded-card p-5 space-y-2">
-                      <h4 className="text-xs font-bold text-primary-light uppercase tracking-widest">Workspace Overview</h4>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                    <div className="bg-white border border-border-slate rounded-card p-5 space-y-2 shadow-subtle">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Workspace Overview</h4>
+                      <p className="text-xs text-text-secondary leading-relaxed font-medium">
                         {activeOutput.data.summary}
                       </p>
                     </div>
-                    <div className="bg-card-surface border border-border-slate rounded-card p-5 space-y-2">
-                      <h4 className="text-xs font-bold text-warning uppercase tracking-widest">Progress Metrics</h4>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                    <div className="bg-white border border-border-slate rounded-card p-5 space-y-2 shadow-subtle">
+                      <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest">Progress Metrics</h4>
+                      <p className="text-xs text-text-secondary leading-relaxed font-medium">
                         {activeOutput.data.progress}
                       </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-card-surface border border-border-slate rounded-card p-5 space-y-2">
+                      <div className="bg-white border border-border-slate rounded-card p-5 space-y-2 shadow-subtle">
                         <h4 className="text-xs font-bold text-danger uppercase tracking-widest">Risks & Blockers</h4>
-                        <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                        <p className="text-xs text-text-secondary leading-relaxed font-medium">
                           {activeOutput.data.risks}
                         </p>
                       </div>
-                      <div className="bg-card-surface border border-border-slate rounded-card p-5 space-y-2">
-                        <h4 className="text-xs font-bold text-success uppercase tracking-widest">AI Recommendations</h4>
-                        <p className="text-xs text-gray-300 leading-relaxed font-medium whitespace-pre-line">
+                      <div className="bg-white border border-border-slate rounded-card p-5 space-y-2 shadow-subtle">
+                        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest">AI Recommendations</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed font-medium whitespace-pre-line">
                           {activeOutput.data.suggestions}
                         </p>
                       </div>
@@ -675,17 +641,17 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
 
                 {/* 3. SPRINT PLAN WEEK ROADMAP */}
                 {activeOutput.type === "sprintPlan" && (
-                  <div className="relative border-l border-border-slate pl-6 ml-3 space-y-6 my-4">
+                  <div className="relative border-l border-border-slate pl-5 ml-2.5 space-y-5 my-3">
                     {activeOutput.data.weeks?.map((w, idx) => (
                       <div key={idx} className="relative">
-                        <div className="absolute -left-[31px] w-2.5 h-2.5 rounded-full bg-primary border border-bg-base" />
-                        <div className="bg-card-surface border border-border-slate rounded-card p-5">
-                          <h4 className="text-xs font-black text-primary-light">
+                        <div className="absolute -left-[25px] top-3.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white" />
+                        <div className="bg-white border border-border-slate rounded-card p-4 shadow-subtle space-y-2">
+                          <h4 className="text-xs font-black text-charcoal">
                             Week {w.week} — {w.title}
                           </h4>
-                          <ul className="mt-3 space-y-1.5">
+                          <ul className="space-y-1">
                             {w.tasks?.map((tsk, taskIdx) => (
-                              <li key={taskIdx} className="text-xs text-gray-400 flex items-start gap-2 leading-relaxed">
+                              <li key={taskIdx} className="text-xs text-text-secondary flex items-start gap-2 leading-relaxed">
                                 <span className="text-primary font-bold">•</span>
                                 {tsk}
                               </li>
@@ -699,8 +665,8 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
 
                 {/* 4. MARKDOWN TEXT PREVIEWS */}
                 {(activeOutput.type === "readme" || activeOutput.type === "documentation") && (
-                  <div className="bg-bg-base border border-border-slate rounded-card p-4 overflow-x-auto shadow-inner">
-                    <pre className="text-[10px] text-primary-light font-mono leading-relaxed whitespace-pre-wrap select-all">
+                  <div className="bg-white border border-border-slate rounded-card p-4 overflow-x-auto shadow-subtle">
+                    <pre className="text-xs text-charcoal font-mono leading-relaxed whitespace-pre-wrap select-all">
                       {activeOutput.data.markdown}
                     </pre>
                   </div>
@@ -708,48 +674,46 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
 
                 {/* 5. DAILY STANDUP */}
                 {activeOutput.type === "standup" && (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="bg-primary/5 border border-primary/20 rounded-card p-5 space-y-2">
-                      <h4 className="text-xs font-bold text-primary-light uppercase tracking-widest border-b border-primary/20 pb-2">
-                        Yesterday
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="bg-white border border-border-slate rounded-card p-4 space-y-2 shadow-subtle">
+                      <h4 className="text-xs font-bold text-charcoal uppercase tracking-wider border-b border-border-slate pb-2">
+                        Yesterday Completed
                       </h4>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                      <p className="text-xs text-text-secondary leading-relaxed">
                         {activeOutput.data.yesterday}
                       </p>
                     </div>
-                    <div className="bg-warning/5 border border-warning/20 rounded-card p-5 space-y-2">
-                      <h4 className="text-xs font-bold text-warning uppercase tracking-widest border-b border-warning/20 pb-2">
-                        Today
+                    <div className="bg-white border border-border-slate rounded-card p-4 space-y-2 shadow-subtle">
+                      <h4 className="text-xs font-bold text-amber-700 uppercase tracking-wider border-b border-border-slate pb-2">
+                        Today Planned
                       </h4>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                      <p className="text-xs text-text-secondary leading-relaxed">
                         {activeOutput.data.today}
                       </p>
                     </div>
-                    <div className="bg-danger/5 border border-danger/20 rounded-card p-5 space-y-2">
-                      <h4 className="text-xs font-bold text-danger uppercase tracking-widest border-b border-danger/20 pb-2">
-                        Blockers
+                    <div className="bg-white border border-border-slate rounded-card p-4 space-y-2 shadow-subtle">
+                      <h4 className="text-xs font-bold text-danger uppercase tracking-wider border-b border-border-slate pb-2">
+                        Current Blockers
                       </h4>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium">
+                      <p className="text-xs text-text-secondary leading-relaxed">
                         {activeOutput.data.blockers}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* 6. HEALTH SCORE circular gauge */}
+                {/* 6. HEALTH SCORE Circular Meter */}
                 {activeOutput.type === "health" && (
-                  <div className="flex flex-col lg:flex-row gap-6 items-center">
-                    
-                    {/* circular meter */}
+                  <div className="flex flex-col lg:flex-row gap-6 items-center bg-white border border-border-slate rounded-card p-6 shadow-subtle">
                     <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#334155" strokeWidth="8" />
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#E9E4DA" strokeWidth="8" />
                         <circle
                            cx="50"
                            cy="50"
                            r="40"
                            fill="transparent"
-                           stroke="url(#blueGradient)"
+                           stroke="url(#orangeHealthGradient)"
                            strokeWidth="8"
                            strokeDasharray={251.2}
                            strokeDashoffset={251.2 - (251.2 * activeOutput.data.healthScore) / 100}
@@ -757,29 +721,27 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                            className="transition-all duration-1000"
                         />
                         <defs>
-                          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#2563EB" />
-                            <stop offset="100%" stopColor="#60A5FA" />
+                          <linearGradient id="orangeHealthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#FF6B2C" />
+                            <stop offset="100%" stopColor="#E8591C" />
                           </linearGradient>
                         </defs>
                       </svg>
                       <div className="absolute flex flex-col items-center">
-                        <span className="text-3xl font-black text-white">{activeOutput.data.healthScore}%</span>
-                        <span className="text-[10px] text-primary-light font-bold uppercase tracking-wider">
+                        <span className="text-3xl font-black text-charcoal">{activeOutput.data.healthScore}%</span>
+                        <span className="text-[10px] text-primary font-bold uppercase tracking-wider">
                           {activeOutput.data.status}
                         </span>
                       </div>
                     </div>
 
-                    <div className="space-y-4 flex-1">
-                      <div className="bg-card-surface border border-border-slate rounded-card p-5 space-y-2">
-                        <h4 className="text-xs font-bold text-primary-light uppercase tracking-wider">
-                          Health Check Feedback
-                        </h4>
-                        <p className="text-xs text-gray-300 leading-relaxed font-medium">
-                          {activeOutput.data.suggestions}
-                        </p>
-                      </div>
+                    <div className="space-y-2 flex-1">
+                      <h4 className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                        Health Check Diagnostics
+                      </h4>
+                      <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                        {activeOutput.data.suggestions}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -788,9 +750,9 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
 
               {/* Suggested Follow-up Actions row */}
               {suggestedActions.length > 0 && (
-                <div className="border-t border-border-slate pt-4 mt-auto shrink-0 flex items-center gap-3 overflow-x-auto">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest shrink-0">
-                    Suggested Actions:
+                <div className="border-t border-border-slate pt-3 mt-auto shrink-0 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0">
+                    Suggested Next:
                   </span>
                   
                   {suggestedActions.map((act) => {
@@ -810,7 +772,7 @@ const AiAssistant = ({ projectId, existingTasks = [], onTaskCreated }) => {
                       <button
                         key={act}
                         onClick={triggerFn}
-                        className="px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary hover:text-white text-primary-light text-[10px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap"
+                        className="px-3 py-1 rounded-full border border-primary/30 bg-primary-tint hover:bg-primary hover:text-white text-primary text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap"
                       >
                         {act}
                       </button>

@@ -5,9 +5,9 @@ import { getMyApplications } from "../services/applicationService";
 import { formatDate } from "../utils/helpers";
 
 const statusBadges = {
-  pending: "bg-warning/10 text-warning border-warning/20",
-  accepted: "bg-success/10 text-success border-success/20",
-  rejected: "bg-danger/10 text-danger border-danger/20",
+  pending: "bg-warning/10 text-warning border-warning/25",
+  accepted: "bg-success/10 text-success border-success/25",
+  rejected: "bg-danger/10 text-danger border-danger/25",
 };
 
 const MyApplications = () => {
@@ -48,39 +48,39 @@ const MyApplications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-base text-white pt-28 pb-16 px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-base text-primary-text pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
           <div>
-            <span className="text-xs font-semibold text-primary-light uppercase tracking-widest bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+            <span className="text-[11px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
               Applications Tracker
             </span>
-            <h1 className="text-3xl md:text-4xl font-black mt-4 tracking-tight">
-              My Sent <span className="gradient-text">Applications</span>
+            <h1 className="text-3xl md:text-4xl font-black mt-3 tracking-tight text-primary-text">
+              My Sent <span className="text-primary">Applications</span>
             </h1>
-            <p className="text-gray-400 text-sm mt-2 max-w-lg">
-              Track requests you've submitted to join other student hackathons, startup ideas, or projects.
+            <p className="text-muted-text text-xs md:text-sm mt-1.5 max-w-lg leading-relaxed">
+              Track join requests you've submitted to project creators across hackathons and campus initiatives.
             </p>
           </div>
           <div>
             <Link
               to="/projects"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-btn font-semibold text-sm text-gray-300 hover:text-white border border-border-slate hover:bg-hover-surface transition-all duration-200"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-btn font-bold text-xs text-primary-text bg-card-surface hover:bg-[#FAF7F2] border border-border-slate transition-all shadow-subtle"
             >
-              Browse More Projects
+              Browse More Projects ↗
             </Link>
           </div>
         </div>
 
         {/* Status Tabs */}
-        <div className="flex border-b border-border-slate gap-6 mb-8 text-sm overflow-x-auto scrollbar-none">
+        <div className="flex border-b border-border-slate gap-6 mb-8 text-xs overflow-x-auto scrollbar-none font-bold">
           {["all", "pending", "accepted", "rejected"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 font-semibold capitalize relative cursor-pointer whitespace-nowrap transition-colors ${
-                activeTab === tab ? "text-primary-light" : "text-gray-400 hover:text-white"
+              className={`pb-3 capitalize relative cursor-pointer whitespace-nowrap transition-colors ${
+                activeTab === tab ? "text-primary" : "text-muted-text hover:text-primary-text"
               }`}
             >
               {tab === "all" ? "All Applications" : `${tab} Requests`}
@@ -96,34 +96,31 @@ const MyApplications = () => {
 
         {/* Content list */}
         {loading ? (
-          /* Skeletons loader */
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-card-surface border border-border-slate rounded-card p-6 h-28 animate-pulse shadow-subtle" />
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16 bg-bg-secondary border border-danger/20 rounded-card shadow-subtle">
-            <p className="text-danger text-sm mb-4">{error}</p>
-            <button onClick={fetchApplications} className="px-4 py-2 rounded-btn text-xs font-semibold bg-primary hover:bg-primary-hover text-white transition-colors duration-200">
+          <div className="text-center py-16 bg-card-surface border border-danger/20 rounded-card shadow-card">
+            <p className="text-danger text-sm mb-4 font-semibold">{error}</p>
+            <button onClick={fetchApplications} className="px-4 py-2 rounded-btn text-xs font-bold bg-primary hover:bg-primary-hover text-white transition-colors">
               Retry
             </button>
           </div>
         ) : filteredApps.length === 0 ? (
-          /* Empty state */
-          <div className="text-center py-20 bg-bg-secondary border border-border-slate rounded-card shadow-subtle">
-            <svg className="w-14 h-14 text-primary-light/30 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 className="text-lg font-bold text-white mb-2">No applications found</h3>
-            <p className="text-gray-500 text-xs max-w-xs mx-auto leading-relaxed">
+          <div className="text-center py-20 bg-card-surface border border-border-slate rounded-card shadow-card">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl mx-auto mb-4">
+              📝
+            </div>
+            <h3 className="text-base font-bold text-primary-text mb-1">No applications found</h3>
+            <p className="text-muted-text text-xs max-w-xs mx-auto leading-relaxed">
               {activeTab === "all"
                 ? "You haven't applied to any projects yet. Start exploring active listings!"
                 : `You don't have any applications currently marked as ${activeTab}.`}
             </p>
           </div>
         ) : (
-          /* Applications list */
           <div className="space-y-4">
             {filteredApps.map((app) => {
               const proj = app.project || {};
@@ -134,32 +131,32 @@ const MyApplications = () => {
                 <motion.div
                   key={app._id}
                   layout
-                  className="bg-card-surface border border-border-slate hover:border-primary rounded-card overflow-hidden transition-all duration-200 shadow-subtle"
+                  className="bg-card-surface border border-border-slate hover:border-primary/50 rounded-card overflow-hidden transition-all duration-200 shadow-card"
                 >
-                  <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <Link
                           to={`/projects/${proj._id}`}
-                          className="text-lg font-bold text-white hover:text-primary-light transition-colors tracking-tight"
+                          className="text-base font-black text-primary-text hover:text-primary transition-colors tracking-tight"
                         >
-                          {proj.title || "Unknown Project"}
+                          {proj.title || "Project"}
                         </Link>
                         <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border ${statusBadges[app.status]}`}>
-                          {app.status}
+                          ● {app.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400">
-                        Role: <span className="text-primary-light font-semibold">{targetRole?.roleName || "Position"}</span>
+                      <p className="text-xs text-muted-text">
+                        Role: <span className="text-primary font-bold">{targetRole?.roleName || "Position"}</span>
                       </p>
-                      <p className="text-[11px] text-gray-400">
+                      <p className="text-[11px] text-muted-text">
                         Applied: {formatDate(app.createdAt)}
                       </p>
                     </div>
 
                     <button
                       onClick={() => toggleExpand(app._id)}
-                      className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 self-start md:self-center cursor-pointer"
+                      className="text-xs font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 self-start md:self-center cursor-pointer"
                     >
                       {isExpanded ? "Hide Details" : "Show Submitted Details"}
                       <svg
@@ -180,26 +177,26 @@ const MyApplications = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="border-t border-border-slate/50 bg-bg-secondary/40 px-6 py-5 space-y-4 text-sm"
+                        className="border-t border-border-slate bg-[#FAF7F2] px-6 py-5 space-y-4 text-xs"
                       >
                         {/* Introduction */}
-                        <div className="space-y-1.5">
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">My Introduction</span>
-                          <p className="text-gray-300 leading-relaxed text-xs md:text-sm">{app.introduction}</p>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-muted-text uppercase tracking-wider block">My Introduction</span>
+                          <p className="text-primary-text leading-relaxed font-medium">{app.introduction}</p>
                         </div>
 
                         {/* Why Join */}
-                        <div className="space-y-1.5">
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Why I want to join</span>
-                          <p className="text-gray-300 leading-relaxed text-xs md:text-sm">{app.whyJoin}</p>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-muted-text uppercase tracking-wider block">Why I want to join</span>
+                          <p className="text-primary-text leading-relaxed font-medium">{app.whyJoin}</p>
                         </div>
 
                         {/* Skills */}
-                        <div className="space-y-1.5">
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Skills Shared</span>
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {app.skills.map((skill) => (
-                              <span key={skill} className="text-[11px] bg-primary/10 text-primary-light border border-primary/20 px-2 py-0.5 rounded font-medium">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-muted-text uppercase tracking-wider block">Skills Shared</span>
+                          <div className="flex flex-wrap gap-1.5 pt-0.5">
+                            {app.skills?.map((skill) => (
+                              <span key={skill} className="text-[10px] bg-white text-primary border border-border-slate px-2.5 py-0.5 rounded-lg font-bold shadow-subtle">
                                 {skill}
                               </span>
                             ))}
@@ -208,15 +205,15 @@ const MyApplications = () => {
 
                         {/* GitHub profile URL */}
                         {app.githubUrl && (
-                          <div className="space-y-1.5">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">GitHub Profile Link</span>
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-muted-text uppercase tracking-wider block">GitHub Profile Link</span>
                             <a
                               href={app.githubUrl.startsWith("http") ? app.githubUrl : `https://${app.githubUrl}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-primary hover:text-primary-hover transition-colors inline-block"
+                              className="text-xs text-primary hover:text-primary-hover font-bold inline-flex items-center gap-1"
                             >
-                              {app.githubUrl}
+                              🐙 {app.githubUrl} ↗
                             </a>
                           </div>
                         )}
